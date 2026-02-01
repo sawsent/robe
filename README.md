@@ -59,7 +59,7 @@ No magic.
 ## Docs
 
 Full spec and behavior:  
-See `docs/spec.md`
+See [docs/spec.md](docs/spec.md)
 
 ---
 
