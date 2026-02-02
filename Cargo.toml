@@ -1,6 +1,6 @@
 [package]
 name = "robe"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
 authors = ["Vicente Figueiredo <vicenteppfigueiredo@gmail.com>"]
 description = "Wear your configs: a tiny CLI for saving and switching between dotfile configurations"
@@ -17,3 +17,9 @@ exclude = ["target", "*.rs.bk", ".github"]
 dirs = "6.0.0"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "0.9.11"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
