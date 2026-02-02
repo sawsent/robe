@@ -10,7 +10,7 @@ homepage = "https://github.com/sawsent/robe"
 documentation = "https://docs.rs/robe"
 readme = "README.md"
 keywords = ["dotfiles", "config", "profiles", "cli", "tool"]
-categories = ["command-line-utilities", "configuration"]
+categories = ["command-line-utilities", "development-tools"]
 exclude = ["target", "*.rs.bk", ".github"]
 
 [dependencies]
