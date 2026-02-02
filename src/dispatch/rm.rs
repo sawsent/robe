@@ -1,9 +1,9 @@
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 use crate::domain::Rm;
 use crate::registry::{Registry, ToolRegistry};
 use crate::dispatch::io;
 
-pub fn rm(cmd: &Rm, registry: &Registry) -> Result<(), SuitError> {
+pub fn rm(cmd: &Rm, registry: &Registry) -> Result<(), RobeError> {
     let tool_registry = registry.tool_registry(&cmd.tool)?;
 
     match &cmd.profile {
@@ -14,14 +14,14 @@ pub fn rm(cmd: &Rm, registry: &Registry) -> Result<(), SuitError> {
     Ok(())
 }
 
-fn rm_profile(tool_registry: &ToolRegistry, profile: &str, registry: &Registry) -> Result<(), SuitError> {
+fn rm_profile(tool_registry: &ToolRegistry, profile: &str, registry: &Registry) -> Result<(), RobeError> {
     let _ = tool_registry.assert_profile_exists(profile)?;
 
     io::delete_profile(registry, tool_registry, profile)?;
     Ok(())
 }
 
-fn rm_tool(tool: &str, registry: &Registry) -> Result<(), SuitError> {
+fn rm_tool(tool: &str, registry: &Registry) -> Result<(), RobeError> {
     io::delete_tool(tool, registry)?;
     Ok(())
 

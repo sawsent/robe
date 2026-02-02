@@ -1,9 +1,9 @@
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 use crate::domain::Use;
 use crate::registry::Registry;
 use crate::dispatch::io;
 
-pub fn usecmd(cmd: &Use, registry: &Registry) -> Result<(), SuitError> {
+pub fn usecmd(cmd: &Use, registry: &Registry) -> Result<(), RobeError> {
     let tool_registry = registry.tool_registry(&cmd.tool)?;
     let _ = tool_registry.assert_profile_exists(&cmd.profile)?;
     let target = tool_registry.real_path;

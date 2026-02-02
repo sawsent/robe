@@ -1,13 +1,13 @@
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 use crate::domain::List;
 use crate::registry::Registry;
 
-pub fn list(cmd: &List, registry: &Registry) -> Result<(), SuitError> {
+pub fn list(cmd: &List, registry: &Registry) -> Result<(), RobeError> {
 
     match &cmd.tool {
         Some(t) => {
             let tr = registry.tool_registry(t)?;
-            println!("suits for {}:", t);
+            println!("robes for {}:", t);
             for p in tr.profiles {
                 println!("  - {}", p)
             }

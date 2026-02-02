@@ -1,14 +1,14 @@
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 use crate::domain::Add;
 use crate::registry::{Registry, ToolMetadata};
 use crate::dispatch::io;
 use std::path::{Path};
 use std::fs;
 
-pub fn add(cmd: &Add, registry: &Registry) -> Result<(), SuitError> {
+pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
     if let Some(tool_registry) = registry.get_tool_registry(&cmd.tool) {
         if tool_registry.profiles.contains(&cmd.profile.to_string()) && !cmd.force {
-            return Err(SuitError::message(format!("Profile {}/{} already exists. Use `-f` to update.", &cmd.tool, &cmd.profile)));
+            return Err(RobeError::message(format!("Profile {}/{} already exists. Use `-f` to update.", &cmd.tool, &cmd.profile)));
         }
 
         let tool_path = Path::join(&registry.base_path, &cmd.tool);
@@ -40,7 +40,7 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), SuitError> {
 
             io::copy_file(&register_path, &target_path)?;
         } else {
-            return Err(SuitError::message(format!("Tool {} not registered. Use -r <file> to register.", &cmd.tool)));
+            return Err(RobeError::message(format!("Tool {} not registered. Use -r <file> to register.", &cmd.tool)));
         }
     }
 

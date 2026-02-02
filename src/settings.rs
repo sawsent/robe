@@ -17,8 +17,8 @@ impl Default for Settings {
 fn default_data_location() -> String {
     dirs::data_local_dir()
         .map(|mut p| {
-            p.push("suit");
+            p.push("robe");
             p
         })
-        .unwrap_or_else(|| PathBuf::from("$HOME/.config/suit/config.toml")).to_string_lossy().to_string()
+        .unwrap_or_else(|| PathBuf::from("$HOME/.config/robe/config.toml")).to_string_lossy().to_string()
 }

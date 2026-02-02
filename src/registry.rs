@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Registry {
@@ -32,11 +32,11 @@ impl ToolRegistry {
         }
     }
 
-    pub fn assert_profile_exists(&self, profile: &str) -> Result<(), SuitError> {
+    pub fn assert_profile_exists(&self, profile: &str) -> Result<(), RobeError> {
         if self.profiles.contains(&profile.to_string()) {
             Ok(())
         } else {
-            Err(SuitError::message(format!("Profile {}/{} not found.", &self.name, &profile)))
+            Err(RobeError::message(format!("Profile {}/{} not found.", &self.name, &profile)))
         }
     }
 }
@@ -59,9 +59,9 @@ impl Registry {
         self.tools.get(&tool.to_string()).cloned()
     }
 
-    pub fn tool_registry(&self, tool: &str) -> Result<ToolRegistry, SuitError> {
+    pub fn tool_registry(&self, tool: &str) -> Result<ToolRegistry, RobeError> {
         match self.get_tool_registry(tool) {
-            None => Err(SuitError::message(format!("Tool {} not found.", tool))),
+            None => Err(RobeError::message(format!("Tool {} not found.", tool))),
             Some(tr) => Ok(tr)
         }
     }

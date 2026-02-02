@@ -1,29 +1,29 @@
-# suit — Specification
+# robe — Specification
 
 ## NAME
-suit — switch between named dotfile configurations
+robe — switch between named dotfile configurations
 
 ## SYNOPSIS
-suit add <tool>/<profile> [-r <path>] [-f]
-suit use <tool>/<profile>
-suit list [tool]
-suit rm <tool>/<profile>
-suit rm <tool>
+robe add <tool>/<profile> [-r <path>] [-f]
+robe use <tool>/<profile>
+robe list [tool]
+robe rm <tool>/<profile>
+robe rm <tool>
 
 ## DESCRIPTION
-suit stores and activates named versions of configuration files.
+robe stores and activates named versions of configuration files.
 
 Each tool maps to one config file.
 Each profile is a saved copy.
 
-suit only saves, switches, lists, and removes profiles.
+robe only saves, switches, lists, and removes profiles.
 
 ## TERMS
 tool      program mapped to one config file
 profile   named saved copy of that file
 
 ## STORAGE
-~/.config/suit/<tool>/<profile>
+~/.config/robe/<tool>/<profile>
 
 Profiles are plain files.
 No metadata is stored.

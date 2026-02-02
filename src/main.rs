@@ -7,7 +7,7 @@ mod utils;
 mod settings;
 
 use domain::Command;
-use errors::SuitError;
+use errors::RobeError;
 use registry::{Registry, ToolRegistry};
 use dispatch::*;
 use settings::Settings;
@@ -21,7 +21,7 @@ fn main() {
     });
 }
 
-fn _main() -> Result<(), SuitError> {
+fn _main() -> Result<(), RobeError> {
     let full_args: Vec<String> = std::env::args().skip(1).collect();
 
     let command = domain::parse_cmd(&full_args)?;
@@ -44,7 +44,7 @@ fn _main() -> Result<(), SuitError> {
     Ok(())
 }
 
-fn get_registry(settings: &Settings) -> Result<Registry, SuitError> {
+fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
     let fp: PathBuf = PathBuf::from(&settings.data_location);
 
     fs::create_dir_all(&fp)?;

@@ -1,11 +1,11 @@
-pub const HELP: &str = r#"suit — switch between named dotfile configurations
+pub const HELP: &str = r#"robe — switch between named dotfile configurations
 
 Usage:
-  suit add <tool>/<profile> [-r <path>] [-f]
-  suit use <tool>/<profile>
-  suit list [tool]
-  suit rm <tool>/<profile>
-  suit rm <tool>
+  robe add <tool>/<profile> [-r <path>] [-f]
+  robe use <tool>/<profile>
+  robe list [tool]
+  robe rm <tool>/<profile>
+  robe rm <tool>
 
 Commands:
   add       save current config as a profile
@@ -24,4 +24,4 @@ pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> St
     format!("{}\nStorage:\n{}\n\nConfig:\n{}", HELP, storage_file, config_file)
 }
 
-pub const VERSION: &str = "suit version 0.1.0";
+pub const VERSION: &str = "robe version 0.1.0";

@@ -1,7 +1,7 @@
-use crate::errors::SuitError;
+use crate::errors::RobeError;
 use std::path::PathBuf;
 
-pub fn parse_cmd(args: &Vec<String>) -> Result<Command, SuitError> {
+pub fn parse_cmd(args: &Vec<String>) -> Result<Command, RobeError> {
     for arg in args {
         if arg == "-h" || arg == "--help" {
             return Ok(Command::Help(args.join(" ")));
@@ -12,23 +12,23 @@ pub fn parse_cmd(args: &Vec<String>) -> Result<Command, SuitError> {
     if let Some(cmd) = args.get(0) {
         parse_internal(&cmd, &args.get(1..).unwrap_or(&[]).to_vec())
     } else {
-        Err(SuitError::BadUsage("No command provided.".to_string()))
+        Err(RobeError::BadUsage("No command provided.".to_string()))
     }
 }
 
-fn parse_internal(cmd: &str, args: &Vec<String>) -> Result<Command, SuitError> {
+fn parse_internal(cmd: &str, args: &Vec<String>) -> Result<Command, RobeError> {
     match cmd {
         "add" => Add::parse(args),
         "use" => Use::parse(args),
         "list" => List::parse(args),
         "rm" => Rm::parse(args),
-        other => Err(SuitError::BadUsage(format!("Command not recognized: {}", other))),
+        other => Err(RobeError::BadUsage(format!("Command not recognized: {}", other))),
     }
 }
 
-fn split_tool_and_profile<F>(joined: &str, bad_usage: F) -> Result<(String, String), SuitError>
+fn split_tool_and_profile<F>(joined: &str, bad_usage: F) -> Result<(String, String), RobeError>
 where
-    F: Fn() -> SuitError,
+    F: Fn() -> RobeError,
 {
     let split: Vec<&str> = joined.split('/').collect();
     if split.len() == 2 {
@@ -58,11 +58,11 @@ pub struct Add {
 }
 
 impl Add {
-    fn bad_usage() -> SuitError {
-        SuitError::BadUsage("Usage: suit add <tool>/<profile> [-r file] [-f]".to_string())
+    fn bad_usage() -> RobeError {
+        RobeError::BadUsage("Usage: robe add <tool>/<profile> [-r file] [-f]".to_string())
     }
 
-    pub fn parse(args: &Vec<String>) -> Result<Command, SuitError> {
+    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
         let mut cmd = Add::default();
         let mut i = 0;
 
@@ -104,14 +104,14 @@ pub struct Use {
 }
 
 impl Use {
-    pub fn parse(args: &Vec<String>) -> Result<Command, SuitError> {
+    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
         if let Some(j) = args.get(0) {
             let (tool, profile) = split_tool_and_profile(j, || {
-                SuitError::BadUsage("Usage: suit use <tool>/<profile>".to_string())
+                RobeError::BadUsage("Usage: robe use <tool>/<profile>".to_string())
             })?;
             Ok(Command::Use(Use { tool, profile }))
         } else {
-            Err(SuitError::BadUsage("Usage: suit use <tool>/<profile>".to_string()))
+            Err(RobeError::BadUsage("Usage: robe use <tool>/<profile>".to_string()))
         }
     }
 }
@@ -122,7 +122,7 @@ pub struct List {
 }
 
 impl List {
-    pub fn parse(args: &Vec<String>) -> Result<Command, SuitError> {
+    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
         let tool = args.get(0).cloned();
         Ok(Command::List(List { tool }))
     }
@@ -135,10 +135,10 @@ pub struct Rm {
 }
 
 impl Rm {
-    pub fn parse(args: &Vec<String>) -> Result<Command, SuitError> {
+    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
         if args.is_empty() {
-            return Err(SuitError::BadUsage(
-                "Usage: suit rm <tool>[/<profile>]".to_string(),
+            return Err(RobeError::BadUsage(
+                "Usage: robe rm <tool>[/<profile>]".to_string(),
             ));
         }
 
@@ -148,7 +148,7 @@ impl Rm {
         // Check if profile is included
         let (tool, profile) = if first.contains('/') {
             let (t, p) = split_tool_and_profile(&first, || {
-                SuitError::BadUsage("Usage: suit rm <tool>[/<profile>] [-f]".to_string())
+                RobeError::BadUsage("Usage: robe rm <tool>[/<profile>] [-f]".to_string())
             })?;
             (t, Some(p))
         } else {
@@ -166,7 +166,7 @@ impl Rm {
 mod tests {
     use super::*;
 
-    fn parse_vec(args: &[&str]) -> Result<Command, SuitError> {
+    fn parse_vec(args: &[&str]) -> Result<Command, RobeError> {
         parse_cmd(&args.iter().map(|s| s.to_string()).collect())
     }
 
