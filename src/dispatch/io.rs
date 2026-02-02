@@ -33,3 +33,9 @@ pub fn delete_tool(tool_name: &str, registry: &Registry) -> Result<(), RobeError
     fs::remove_dir_all(tool_path)?;
     Ok(())
 }
+
+pub fn print_file(fp: &Path) -> Result<(), RobeError> {
+    let fstr = fs::read_to_string(fp)?;
+    println!("{}", fstr);
+    Ok(())
+}

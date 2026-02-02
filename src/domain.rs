@@ -22,6 +22,7 @@ fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
         "use" => Use::parse(args),
         "list" => List::parse(args),
         "rm" => Rm::parse(args),
+        "view" => View::parse(args),
         other => Err(RobeError::BadUsage(format!(
             "Command not recognized: {}",
             other
@@ -48,6 +49,7 @@ pub enum Command {
     Version,
     Add(Add),
     Use(Use),
+    View(View),
     List(List),
     Rm(Rm),
 }
@@ -97,6 +99,36 @@ impl Add {
         }
 
         Ok(Command::Add(cmd))
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct View {
+    pub tool: String,
+    pub profile: Option<String>,
+}
+
+impl View {
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        if args.is_empty() {
+            return Err(RobeError::BadUsage(
+                "Usage: robe view <tool>[/<profile>]".to_string(),
+            ));
+        }
+
+        let first = args[0].clone();
+
+        // Check if profile is included
+        let (tool, profile) = if first.contains('/') {
+            let (t, p) = split_tool_and_profile(&first, || {
+                RobeError::BadUsage("Usage: robe view <tool>[/<profile>]".to_string())
+            })?;
+            (t, Some(p))
+        } else {
+            (first, None)
+        };
+
+        Ok(Command::View(View { tool, profile }))
     }
 }
 
@@ -152,7 +184,7 @@ impl Rm {
         // Check if profile is included
         let (tool, profile) = if first.contains('/') {
             let (t, p) = split_tool_and_profile(&first, || {
-                RobeError::BadUsage("Usage: robe rm <tool>[/<profile>] [-f]".to_string())
+                RobeError::BadUsage("Usage: robe rm <tool>[/<profile>]".to_string())
             })?;
             (t, Some(p))
         } else {

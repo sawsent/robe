@@ -39,6 +39,14 @@ robe use tmux/work
 robe use tmux/clean
 ```
 
+View current or stored configs:
+```bash
+# Current config
+robe view tmux
+# Stored 'clean' config
+robe view tmux/clean
+```
+
 ---
 
 ## What it does

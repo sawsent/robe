@@ -9,6 +9,8 @@ robe use <tool>/<profile>
 robe list [tool]
 robe rm <tool>/<profile>
 robe rm <tool>
+robe view <tool>
+robe view <tool>/<profile>
 
 ## DESCRIPTION
 robe stores and activates named versions of configuration files.
@@ -16,7 +18,7 @@ robe stores and activates named versions of configuration files.
 Each tool maps to one config file.
 Each profile is a saved copy.
 
-robe only saves, switches, lists, and removes profiles.
+robe only saves, switches, lists, removes, or views profiles.
 
 ## TERMS
 tool      program mapped to one config file
@@ -45,6 +47,12 @@ rm <tool>/<profile>
 
 rm <tool>
     delete all profiles for a tool
+
+view <tool>
+    display the currently active config for a tool
+
+view <tool>/<profile>
+    display a stored profile without activating it
 
 ## OPTIONS
 -h, --help       show help
