@@ -1,5 +1,3 @@
-
-```markdown
 # robe
 
 **Wear your configs.**
@@ -70,6 +68,4 @@ See [docs/spec.md](docs/spec.md)
 ## License
 
 Licensed under the Apache License, Version 2.0.  
-See the `LICENSE` file for details.
-```
-
+See the [LICENSE](LICENSE) file for details.
