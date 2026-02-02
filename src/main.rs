@@ -12,6 +12,7 @@ use errors::RobeError;
 use registry::{Registry, ToolRegistry};
 use settings::Settings;
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -39,7 +40,7 @@ fn _main() -> Result<(), RobeError> {
         Command::List(ls) => list::list(&ls, &registry)?,
         Command::Help(_cmd) => println!(
             "{}",
-            help::help_with_storage_and_config(&settings.data_location, &settings_fp)
+            help::help_with_storage_and_config(&settings.wardrobe, &settings_fp)
         ),
         Command::Version => println!("{}", help::VERSION),
     };
@@ -48,25 +49,27 @@ fn _main() -> Result<(), RobeError> {
 }
 
 fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
-    let fp: PathBuf = PathBuf::from(&settings.data_location);
+    let fp: PathBuf = PathBuf::from(&settings.wardrobe);
 
     fs::create_dir_all(&fp)?;
 
-    let mut registry = Registry::default();
-    registry.base_path = fp.clone();
+    let mut registered: HashMap<String, ToolRegistry> = HashMap::new();
 
     for tool in utils::get_subdirs(&fp)? {
-        if let Ok(str) = fs::read_to_string(Path::join(&tool, "meta.toml")) {
-            if let Ok(meta) = toml::from_str(&str) {
-                let profiles = utils::get_files_in_dir_except(&tool, "meta.toml")?;
-                if let Some(tool_name_os) = tool.file_name() {
-                    let tool_name = tool_name_os.to_string_lossy().to_string();
-                    let tool_registry = ToolRegistry::new(&tool_name, &meta, &profiles);
-                    registry.tools.insert(tool_name, tool_registry);
-                }
+        if let Ok(str) = fs::read_to_string(Path::join(&tool, "meta.toml"))
+            && let Ok(meta) = toml::from_str(&str)
+        {
+            let profiles = utils::get_files_in_dir_except(&tool, "meta.toml")?;
+            if let Some(tool_name_os) = tool.file_name() {
+                let tool_name = tool_name_os.to_string_lossy().to_string();
+                let tool_registry = ToolRegistry::new(&tool_name, &meta, &profiles);
+                registered.insert(tool_name, tool_registry);
             }
         }
     }
 
-    Ok(registry)
+    Ok(Registry {
+        base_path: fp.clone(),
+        tools: registered,
+    })
 }

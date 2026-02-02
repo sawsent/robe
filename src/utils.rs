@@ -16,10 +16,10 @@ pub fn settings_file_path() -> String {
 }
 
 pub fn get_settings(fp: &String) -> Settings {
-    if let Ok(string) = fs::read_to_string(&PathBuf::from(fp)) {
-        if let Ok(settings) = toml::from_str(&string) {
-            return settings;
-        }
+    if let Ok(string) = fs::read_to_string(PathBuf::from(fp))
+        && let Ok(settings) = toml::from_str(&string)
+    {
+        return settings;
     }
     Settings::default()
 }

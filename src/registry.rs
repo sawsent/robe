@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::errors::RobeError;
 
@@ -50,7 +50,7 @@ pub struct ToolMetadata {
 }
 
 impl ToolMetadata {
-    pub fn create(path: &PathBuf) -> Self {
+    pub fn create(path: &Path) -> Self {
         Self {
             real_path: path.to_string_lossy().to_string(),
         }
@@ -59,7 +59,7 @@ impl ToolMetadata {
 
 impl Registry {
     pub fn get_tool_registry(&self, tool: &str) -> Option<ToolRegistry> {
-        self.tools.get(&tool.to_string()).cloned()
+        self.tools.get(tool).cloned()
     }
 
     pub fn tool_registry(&self, tool: &str) -> Result<ToolRegistry, RobeError> {

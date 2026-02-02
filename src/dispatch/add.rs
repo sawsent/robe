@@ -28,25 +28,23 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
         target_path.push(cmd.profile.clone());
 
         io::copy_file(&real_path, &target_path)?;
+    } else if let Some(register_path) = cmd.to_register.clone() {
+        let tool_path = Path::join(&registry.base_path, &cmd.tool);
+        let mut target_path = tool_path.clone();
+        fs::create_dir_all(&tool_path)?;
+
+        let meta = ToolMetadata::create(&register_path);
+
+        io::store_metadata(&tool_path, &meta)?;
+
+        target_path.push(cmd.profile.clone());
+
+        io::copy_file(&register_path, &target_path)?;
     } else {
-        if let Some(register_path) = cmd.to_register.clone() {
-            let tool_path = Path::join(&registry.base_path, &cmd.tool);
-            let mut target_path = tool_path.clone();
-            fs::create_dir_all(&tool_path)?;
-
-            let meta = ToolMetadata::create(&register_path);
-
-            io::store_metadata(&tool_path, &meta)?;
-
-            target_path.push(cmd.profile.clone());
-
-            io::copy_file(&register_path, &target_path)?;
-        } else {
-            return Err(RobeError::message(format!(
-                "Tool {} not registered. Use -r <file> to register.",
-                &cmd.tool
-            )));
-        }
+        return Err(RobeError::message(format!(
+            "Tool {} not registered. Use -r <file> to register.",
+            &cmd.tool
+        )));
     }
 
     Ok(())

@@ -9,14 +9,14 @@ pub fn parse_cmd(args: &Vec<String>) -> Result<Command, RobeError> {
             return Ok(Command::Version);
         }
     }
-    if let Some(cmd) = args.get(0) {
-        parse_internal(&cmd, &args.get(1..).unwrap_or(&[]).to_vec())
+    if let Some(cmd) = args.first() {
+        parse_internal(cmd, args.get(1..).unwrap_or(&[]))
     } else {
         Err(RobeError::BadUsage("No command provided.".to_string()))
     }
 }
 
-fn parse_internal(cmd: &str, args: &Vec<String>) -> Result<Command, RobeError> {
+fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
     match cmd {
         "add" => Add::parse(args),
         "use" => Use::parse(args),
@@ -34,10 +34,10 @@ where
     F: Fn() -> RobeError,
 {
     let split: Vec<&str> = joined.split('/').collect();
-    if split.len() == 2 {
-        if let (Some(t), Some(p)) = (split.get(0), split.get(1)) {
-            return Ok((t.to_string(), p.to_string()));
-        }
+    if split.len() == 2
+        && let (Some(t), Some(p)) = (split.first(), split.get(1))
+    {
+        return Ok((t.to_string(), p.to_string()));
     }
     Err(bad_usage())
 }
@@ -65,7 +65,7 @@ impl Add {
         RobeError::BadUsage("Usage: robe add <tool>/<profile> [-r file] [-f]".to_string())
     }
 
-    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         let mut cmd = Add::default();
         let mut i = 0;
 
@@ -107,8 +107,8 @@ pub struct Use {
 }
 
 impl Use {
-    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
-        if let Some(j) = args.get(0) {
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        if let Some(j) = args.first() {
             let (tool, profile) = split_tool_and_profile(j, || {
                 RobeError::BadUsage("Usage: robe use <tool>/<profile>".to_string())
             })?;
@@ -127,8 +127,8 @@ pub struct List {
 }
 
 impl List {
-    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
-        let tool = args.get(0).cloned();
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        let tool = args.first().cloned();
         Ok(Command::List(List { tool }))
     }
 }
@@ -140,7 +140,7 @@ pub struct Rm {
 }
 
 impl Rm {
-    pub fn parse(args: &Vec<String>) -> Result<Command, RobeError> {
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         if args.is_empty() {
             return Err(RobeError::BadUsage(
                 "Usage: robe rm <tool>[/<profile>]".to_string(),

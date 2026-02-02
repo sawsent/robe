@@ -8,7 +8,7 @@ pub fn copy_file(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     Ok(())
 }
 
-pub fn store_metadata(tool_path: &PathBuf, meta: &ToolMetadata) -> Result<(), RobeError> {
+pub fn store_metadata(tool_path: &Path, meta: &ToolMetadata) -> Result<(), RobeError> {
     let p = Path::join(tool_path, "meta.toml");
     fs::write(&p, toml::to_string_pretty(meta)?)?;
     Ok(())

@@ -7,7 +7,7 @@ pub fn rm(cmd: &Rm, registry: &Registry) -> Result<(), RobeError> {
     let tool_registry = registry.tool_registry(&cmd.tool)?;
 
     match &cmd.profile {
-        Some(profile) => rm_profile(&tool_registry, &profile, registry)?,
+        Some(profile) => rm_profile(&tool_registry, profile, registry)?,
         None => rm_tool(&tool_registry.name, registry)?,
     }
 
@@ -19,7 +19,7 @@ fn rm_profile(
     profile: &str,
     registry: &Registry,
 ) -> Result<(), RobeError> {
-    let _ = tool_registry.assert_profile_exists(profile)?;
+    tool_registry.assert_profile_exists(profile)?;
 
     io::delete_profile(registry, tool_registry, profile)?;
     Ok(())
