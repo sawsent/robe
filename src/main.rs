@@ -1,4 +1,73 @@
 mod help;
+mod domain;
+mod errors;
+mod dispatch;
+mod registry;
+mod utils;
+mod settings;
+
+use domain::Command;
+use errors::SuitError;
+use registry::{Registry, ToolRegistry};
+use dispatch::*;
+use settings::Settings;
+
+use std::path::{PathBuf, Path};
+use std::fs;
+
 fn main() {
-    println!("{}", help::HELP);
+    _main().unwrap_or_else(|err| {
+        println!("{}", err);
+    });
 }
+
+fn _main() -> Result<(), SuitError> {
+    let full_args: Vec<String> = std::env::args().skip(1).collect();
+
+    let command = domain::parse_cmd(&full_args)?;
+
+    let settings_fp = utils::settings_file_path();
+
+    let settings = utils::get_settings(&settings_fp);
+
+    let registry = get_registry(&settings)?;
+
+    match command {
+        Command::Add(add) => add::add(&add, &registry)?,
+        Command::Use(usecmd) => usecmd::usecmd(&usecmd, &registry)?,
+        Command::Rm(rm) => rm::rm(&rm, &registry)?,
+        Command::List(ls) => list::list(&ls, &registry)?,
+        Command::Help(_cmd) => println!("{}", help::help_with_storage_and_config(&settings.data_location, &settings_fp)),
+        Command::Version => println!("{}", help::VERSION)
+    };
+
+    Ok(())
+}
+
+fn get_registry(settings: &Settings) -> Result<Registry, SuitError> {
+    let fp: PathBuf = PathBuf::from(&settings.data_location);
+
+    fs::create_dir_all(&fp)?;
+
+    let mut registry = Registry::default();
+    registry.base_path = fp.clone();
+
+    for tool in utils::get_subdirs(&fp)? {
+        if let Ok(str) = fs::read_to_string(Path::join(&tool, "meta.toml")) {
+            if let Ok(meta) = toml::from_str(&str) {
+                let profiles = utils::get_files_in_dir_except(&tool, "meta.toml")?;
+                if let Some(tool_name_os) = tool.file_name() {
+                    let tool_name = tool_name_os.to_string_lossy().to_string();
+                    let tool_registry = ToolRegistry::new(&tool_name, &meta, &profiles);
+                    registry.tools.insert(tool_name, tool_registry);
+                }
+            }
+        }
+    }
+
+    Ok(registry)
+}
+
+
+
+

@@ -7,60 +7,56 @@ suit — switch between named dotfile configurations
 suit add <tool>/<profile> [-r <path>] [-f]
 suit use <tool>/<profile>
 suit list [tool]
-suit current <tool>
-suit rename <tool> <new_tool> [-f]
-suit restore <tool>
-suit rm <tool>/<profile> [-f]
-suit rm <tool> [-f]
+suit rm <tool>/<profile>
+suit rm <tool>
 
 ## DESCRIPTION
-`suit` stores and activates named versions of configuration files.
-Each tool has one config file. Each profile is a saved copy.
-Operations: add, use, list, current, rename, restore, rm (profile or tool).
+suit stores and activates named versions of configuration files.
+
+Each tool maps to one config file.
+Each profile is a saved copy.
+
+suit only saves, switches, lists, and removes profiles.
 
 ## TERMS
-**tool** — program with one config file  
-**profile** — saved version of a tool’s config  
-**active** — profile currently in use  
+tool      program mapped to one config file
+profile   named saved copy of that file
 
 ## STORAGE
-~/.config/suit/<tool>/<profile>  
-Profiles are plain files. No metadata.
+~/.config/suit/<tool>/<profile>
+
+Profiles are plain files.
+No metadata is stored.
 
 ## COMMANDS
-add <tool>/<profile> [-r <path>] [-f]  
-    save current config as a profile; -r registers a file if default missing  
+add <tool>/<profile> [-r <path>] [-f]
+    save current config as a profile
+    -r, --register <path>  register target file
+    -f, --force            overwrite existing profile or registration
 
-use <tool>/<profile>  
-    activate profile  
+use <tool>/<profile>
+    activate profile
 
-list [tool]  
-    list tools or profiles; active marked  
+list [tool]
+    list tools or profiles
 
-current <tool>  
-    show active profile  
+rm <tool>/<profile>
+    delete a stored profile
 
-rename <tool> <new_tool> [-f]  
-    rename a tool; updates stored profiles and active link  
-
-restore <tool>  
-    restore a tool to its last pre-suit-load state  
-
-rm <tool>/<profile> [-f]  
-    delete a stored profile; fails if active unless -f  
-
-rm <tool> [-f]  
-    delete all profiles for a tool; fails if any active unless -f  
+rm <tool>
+    delete all profiles for a tool
 
 ## OPTIONS
--d, --dir <path>      storage directory (default: ~/.config/suit)
--f, --force           overwrite or remove without prompting  
--h, --help  
--v, --version  
+-h, --help       show help
+-v, --version    show version
 
 ## GUARANTEES
-Single-file configs only. Deterministic. No background processes. Profiles remain plain files.
+- single-file configs only
+- deterministic behavior
+- no hidden state
+- no background processes
+- profiles remain normal files
 
 ## NON-GOALS
-Directories, templating, repo management, syncing, environments, automation.
+directories, templating, repos, syncing, environments, automation
 
