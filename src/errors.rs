@@ -2,8 +2,7 @@
 pub enum RobeError {
     Internal(String),
     BadUsage(String),
-    Simple(String)
-
+    Simple(String),
 }
 
 impl RobeError {
@@ -16,8 +15,11 @@ impl std::fmt::Display for RobeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Internal(err) => f.write_fmt(format_args!("robe: {}", err)),
-            Self::BadUsage(err) => f.write_fmt(format_args!("robe: Wrong usage. {}\nUse `robe -h` for help.", err)),
-            Self::Simple(msg)   => f.write_fmt(format_args!("robe: {}", msg)),
+            Self::BadUsage(err) => f.write_fmt(format_args!(
+                "robe: Wrong usage. {}\nUse `robe -h` for help.",
+                err
+            )),
+            Self::Simple(msg) => f.write_fmt(format_args!("robe: {}", msg)),
         }
     }
 }

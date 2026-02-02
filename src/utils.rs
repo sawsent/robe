@@ -1,18 +1,18 @@
-use std::fs;
-use std::path::{PathBuf};
 use crate::errors::RobeError;
 use crate::settings::Settings;
-
+use std::fs;
+use std::path::PathBuf;
 
 pub fn settings_file_path() -> String {
-    let maybe_fp = dirs::config_local_dir()
-        .map(|mut p| {
-            p.push("robe");
-            p.push("config.toml");
-            p
-        });
+    let maybe_fp = dirs::config_local_dir().map(|mut p| {
+        p.push("robe");
+        p.push("config.toml");
+        p
+    });
 
-    maybe_fp.map(|fp| fp.to_string_lossy().to_string()).unwrap_or_else(|| "$HOME/.config/robe/config.toml".to_string())
+    maybe_fp
+        .map(|fp| fp.to_string_lossy().to_string())
+        .unwrap_or_else(|| "$HOME/.config/robe/config.toml".to_string())
 }
 
 pub fn get_settings(fp: &String) -> Settings {
@@ -69,4 +69,3 @@ pub fn get_files_in_dir_except(dir: &PathBuf, file_name: &str) -> Result<Vec<Pat
 
     Ok(dirs)
 }
-

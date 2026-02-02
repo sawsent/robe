@@ -1,19 +1,19 @@
-mod help;
+mod dispatch;
 mod domain;
 mod errors;
-mod dispatch;
+mod help;
 mod registry;
-mod utils;
 mod settings;
+mod utils;
 
+use dispatch::*;
 use domain::Command;
 use errors::RobeError;
 use registry::{Registry, ToolRegistry};
-use dispatch::*;
 use settings::Settings;
 
-use std::path::{PathBuf, Path};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 fn main() {
     _main().unwrap_or_else(|err| {
@@ -37,8 +37,11 @@ fn _main() -> Result<(), RobeError> {
         Command::Use(usecmd) => usecmd::usecmd(&usecmd, &registry)?,
         Command::Rm(rm) => rm::rm(&rm, &registry)?,
         Command::List(ls) => list::list(&ls, &registry)?,
-        Command::Help(_cmd) => println!("{}", help::help_with_storage_and_config(&settings.data_location, &settings_fp)),
-        Command::Version => println!("{}", help::VERSION)
+        Command::Help(_cmd) => println!(
+            "{}",
+            help::help_with_storage_and_config(&settings.data_location, &settings_fp)
+        ),
+        Command::Version => println!("{}", help::VERSION),
     };
 
     Ok(())
@@ -67,7 +70,3 @@ fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
 
     Ok(registry)
 }
-
-
-
-

@@ -1,7 +1,7 @@
-use crate::errors::RobeError;
-use crate::domain::Use;
-use crate::registry::Registry;
 use crate::dispatch::io;
+use crate::domain::Use;
+use crate::errors::RobeError;
+use crate::registry::Registry;
 
 pub fn usecmd(cmd: &Use, registry: &Registry) -> Result<(), RobeError> {
     let tool_registry = registry.tool_registry(&cmd.tool)?;

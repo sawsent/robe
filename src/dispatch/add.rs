@@ -1,14 +1,17 @@
-use crate::errors::RobeError;
-use crate::domain::Add;
-use crate::registry::{Registry, ToolMetadata};
 use crate::dispatch::io;
-use std::path::{Path};
+use crate::domain::Add;
+use crate::errors::RobeError;
+use crate::registry::{Registry, ToolMetadata};
 use std::fs;
+use std::path::Path;
 
 pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
     if let Some(tool_registry) = registry.get_tool_registry(&cmd.tool) {
         if tool_registry.profiles.contains(&cmd.profile.to_string()) && !cmd.force {
-            return Err(RobeError::message(format!("Profile {}/{} already exists. Use `-f` to update.", &cmd.tool, &cmd.profile)));
+            return Err(RobeError::message(format!(
+                "Profile {}/{} already exists. Use `-f` to update.",
+                &cmd.tool, &cmd.profile
+            )));
         }
 
         let tool_path = Path::join(&registry.base_path, &cmd.tool);
@@ -26,7 +29,6 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
 
         io::copy_file(&real_path, &target_path)?;
     } else {
-
         if let Some(register_path) = cmd.to_register.clone() {
             let tool_path = Path::join(&registry.base_path, &cmd.tool);
             let mut target_path = tool_path.clone();
@@ -40,10 +42,12 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
 
             io::copy_file(&register_path, &target_path)?;
         } else {
-            return Err(RobeError::message(format!("Tool {} not registered. Use -r <file> to register.", &cmd.tool)));
+            return Err(RobeError::message(format!(
+                "Tool {} not registered. Use -r <file> to register.",
+                &cmd.tool
+            )));
         }
     }
 
     Ok(())
 }
-

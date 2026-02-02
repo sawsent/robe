@@ -21,7 +21,10 @@ Options:
 "#;
 
 pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> String {
-    format!("{}\nStorage:\n{}\n\nConfig:\n{}", HELP, storage_file, config_file)
+    format!(
+        "{}\nStorage:\n{}\n\nConfig:\n{}",
+        HELP, storage_file, config_file
+    )
 }
 
 pub const VERSION: &str = "robe version 0.1.0";

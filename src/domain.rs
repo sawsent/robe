@@ -22,7 +22,10 @@ fn parse_internal(cmd: &str, args: &Vec<String>) -> Result<Command, RobeError> {
         "use" => Use::parse(args),
         "list" => List::parse(args),
         "rm" => Rm::parse(args),
-        other => Err(RobeError::BadUsage(format!("Command not recognized: {}", other))),
+        other => Err(RobeError::BadUsage(format!(
+            "Command not recognized: {}",
+            other
+        ))),
     }
 }
 
@@ -111,7 +114,9 @@ impl Use {
             })?;
             Ok(Command::Use(Use { tool, profile }))
         } else {
-            Err(RobeError::BadUsage("Usage: robe use <tool>/<profile>".to_string()))
+            Err(RobeError::BadUsage(
+                "Usage: robe use <tool>/<profile>".to_string(),
+            ))
         }
     }
 }
@@ -131,7 +136,7 @@ impl List {
 #[derive(Debug, Clone)]
 pub struct Rm {
     pub tool: String,
-    pub profile: Option<String>
+    pub profile: Option<String>,
 }
 
 impl Rm {
@@ -144,7 +149,6 @@ impl Rm {
 
         let first = args[0].clone();
 
-
         // Check if profile is included
         let (tool, profile) = if first.contains('/') {
             let (t, p) = split_tool_and_profile(&first, || {
@@ -155,10 +159,7 @@ impl Rm {
             (first, None)
         };
 
-        Ok(Command::Rm(Rm {
-            tool,
-            profile,
-        }))
+        Ok(Command::Rm(Rm { tool, profile }))
     }
 }
 
@@ -184,8 +185,7 @@ mod tests {
 
     #[test]
     fn test_add_force() {
-        if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-f"]).unwrap()
-        {
+        if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-f"]).unwrap() {
             assert_eq!(a.to_register, None);
             assert!(a.force);
         }
@@ -229,7 +229,7 @@ mod tests {
     fn test_help() {
         match parse_vec(&["restore", "tmux", "-h"]).unwrap() {
             Command::Help(t) if t == "restore tmux -h" => (),
-            _ => panic!()
+            _ => panic!(),
         }
     }
 
@@ -237,8 +237,7 @@ mod tests {
     fn test_version() {
         match parse_vec(&["-v", "add", "tmux"]).unwrap() {
             Command::Version => (),
-            _ => panic!()
+            _ => panic!(),
         }
     }
 }
-

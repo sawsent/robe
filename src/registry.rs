@@ -1,13 +1,13 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde::{Serialize, Deserialize};
 
 use crate::errors::RobeError;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Registry {
     pub base_path: PathBuf,
-    pub tools: HashMap<String, ToolRegistry>
+    pub tools: HashMap<String, ToolRegistry>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -28,7 +28,7 @@ impl ToolRegistry {
         Self {
             name: name.to_string(),
             real_path: PathBuf::from(meta.real_path.clone()),
-            profiles: prof
+            profiles: prof,
         }
     }
 
@@ -36,7 +36,10 @@ impl ToolRegistry {
         if self.profiles.contains(&profile.to_string()) {
             Ok(())
         } else {
-            Err(RobeError::message(format!("Profile {}/{} not found.", &self.name, &profile)))
+            Err(RobeError::message(format!(
+                "Profile {}/{} not found.",
+                &self.name, &profile
+            )))
         }
     }
 }
@@ -49,7 +52,7 @@ pub struct ToolMetadata {
 impl ToolMetadata {
     pub fn create(path: &PathBuf) -> Self {
         Self {
-            real_path: path.to_string_lossy().to_string()
+            real_path: path.to_string_lossy().to_string(),
         }
     }
 }
@@ -62,8 +65,7 @@ impl Registry {
     pub fn tool_registry(&self, tool: &str) -> Result<ToolRegistry, RobeError> {
         match self.get_tool_registry(tool) {
             None => Err(RobeError::message(format!("Tool {} not found.", tool))),
-            Some(tr) => Ok(tr)
+            Some(tr) => Ok(tr),
         }
     }
 }
-

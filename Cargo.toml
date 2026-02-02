@@ -2,6 +2,16 @@
 name = "robe"
 version = "0.1.0"
 edition = "2024"
+authors = ["Vicente Figueiredo <vicenteppfigueiredo@gmail.com>"]
+description = "Wear your configs: a tiny CLI for saving and switching between dotfile configurations"
+license = "Apache-2.0"
+repository = "https://github.com/sawsent/robe"
+homepage = "https://github.com/sawsent/robe"
+documentation = "https://docs.rs/robe"
+readme = "README.md"
+keywords = ["dotfiles", "config", "profiles", "cli", "tool"]
+categories = ["command-line-utilities", "configuration"]
+exclude = ["target", "*.rs.bk"]
 
 [dependencies]
 dirs = "6.0.0"
