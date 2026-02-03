@@ -55,7 +55,12 @@ pub fn delete_profile(
     profile_path.push(target_registry.name.clone());
     profile_path.push(profile);
 
-    fs::remove_file(profile_path)?;
+    if profile_path.is_file() {
+        fs::remove_file(&profile_path)?;
+    }
+    if profile_path.is_dir() {
+        fs::remove_dir_all(&profile_path)?;
+    }
     Ok(())
 }
 
