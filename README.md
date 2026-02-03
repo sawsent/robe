@@ -1,8 +1,6 @@
 # robe
 
---------------
 **Disclaimer: robe touches your filesystem and is in early development. Use at your own risk**
---------------
 
 **Wear your configs.**
 
