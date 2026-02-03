@@ -3,17 +3,17 @@ use crate::errors::RobeError;
 use crate::registry::Registry;
 
 pub fn list(cmd: &List, registry: &Registry) -> Result<(), RobeError> {
-    match &cmd.tool {
+    match &cmd.target {
         Some(t) => {
-            let tr = registry.tool_registry(t)?;
+            let tr = registry.target_registry(t)?;
             println!("robes for {}:", t);
             for p in tr.profiles {
                 println!("  - {}", p)
             }
         }
         None => {
-            println!("registered tools:");
-            for t in registry.tools.keys() {
+            println!("registered targets:");
+            for t in registry.targets.keys() {
                 println!("  - {}", t);
             }
         }

@@ -30,7 +30,7 @@ fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
     }
 }
 
-fn split_tool_and_profile<F>(joined: &str, bad_usage: F) -> Result<(String, String), RobeError>
+fn split_target_and_profile<F>(joined: &str, bad_usage: F) -> Result<(String, String), RobeError>
 where
     F: Fn() -> RobeError,
 {
@@ -56,29 +56,29 @@ pub enum Command {
 
 #[derive(Debug, Clone, Default)]
 pub struct Add {
-    pub tool: String,
+    pub target: String,
     pub profile: String,
     pub to_register: Option<PathBuf>,
     pub force: bool,
 }
 
 impl Add {
-    fn bad_usage() -> RobeError {
-        RobeError::BadUsage("Usage: robe add <tool>/<profile> [-r file] [-f]".to_string())
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe add <target>/<profile> [-r file] [-f]".to_string())
     }
 
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         let mut cmd = Add::default();
         let mut i = 0;
 
-        // First argument: tool/profile
+        // First argument: target/profile
         if let Some(j) = args.get(i) {
-            let (tool, profile) = split_tool_and_profile(j, Add::bad_usage)?;
-            cmd.tool = tool;
+            let (target, profile) = split_target_and_profile(j, Add::bu)?;
+            cmd.target = target;
             cmd.profile = profile;
             i += 1;
         } else {
-            return Err(Add::bad_usage());
+            return Err(Add::bu());
         }
 
         // Optional flags
@@ -89,11 +89,11 @@ impl Add {
                     if let Some(f) = args.get(i) {
                         cmd.to_register = Some(PathBuf::from(&f).canonicalize()?);
                     } else {
-                        return Err(Add::bad_usage());
+                        return Err(Add::bu());
                     }
                 }
                 "-f" | "--force" => cmd.force = true,
-                _ => return Err(Add::bad_usage()),
+                _ => return Err(Add::bu()),
             }
             i += 1;
         }
@@ -104,94 +104,90 @@ impl Add {
 
 #[derive(Debug, Clone, Default)]
 pub struct View {
-    pub tool: String,
+    pub target: String,
     pub profile: Option<String>,
 }
 
 impl View {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe view <target>[/<profile>]".to_string())
+    }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         if args.is_empty() {
-            return Err(RobeError::BadUsage(
-                "Usage: robe view <tool>[/<profile>]".to_string(),
-            ));
+            return Err(Self::bu());
         }
 
         let first = args[0].clone();
 
         // Check if profile is included
-        let (tool, profile) = if first.contains('/') {
-            let (t, p) = split_tool_and_profile(&first, || {
-                RobeError::BadUsage("Usage: robe view <tool>[/<profile>]".to_string())
-            })?;
+        let (target, profile) = if first.contains('/') {
+            let (t, p) = split_target_and_profile(&first, Self::bu)?;
             (t, Some(p))
         } else {
             (first, None)
         };
 
-        Ok(Command::View(View { tool, profile }))
+        Ok(Command::View(View { target, profile }))
     }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Use {
-    pub tool: String,
+    pub target: String,
     pub profile: String,
 }
 
 impl Use {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe use <target>/<profile>".to_string())
+    }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         if let Some(j) = args.first() {
-            let (tool, profile) = split_tool_and_profile(j, || {
-                RobeError::BadUsage("Usage: robe use <tool>/<profile>".to_string())
-            })?;
-            Ok(Command::Use(Use { tool, profile }))
+            let (target, profile) = split_target_and_profile(j, Self::bu)?;
+            Ok(Command::Use(Use { target, profile }))
         } else {
-            Err(RobeError::BadUsage(
-                "Usage: robe use <tool>/<profile>".to_string(),
-            ))
+            Err(Self::bu())
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct List {
-    pub tool: Option<String>,
+    pub target: Option<String>,
 }
 
 impl List {
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        let tool = args.first().cloned();
-        Ok(Command::List(List { tool }))
+        let target = args.first().cloned();
+        Ok(Command::List(List { target }))
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Rm {
-    pub tool: String,
+    pub target: String,
     pub profile: Option<String>,
 }
 
 impl Rm {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe rm <target>[/<profile>]".to_string())
+    }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
         if args.is_empty() {
-            return Err(RobeError::BadUsage(
-                "Usage: robe rm <tool>[/<profile>]".to_string(),
-            ));
+            return Err(Self::bu());
         }
 
         let first = args[0].clone();
 
-        // Check if profile is included
-        let (tool, profile) = if first.contains('/') {
-            let (t, p) = split_tool_and_profile(&first, || {
-                RobeError::BadUsage("Usage: robe rm <tool>[/<profile>]".to_string())
-            })?;
+        let (target, profile) = if first.contains('/') {
+            let (t, p) = split_target_and_profile(&first, Self::bu)?;
             (t, Some(p))
         } else {
             (first, None)
         };
 
-        Ok(Command::Rm(Rm { tool, profile }))
+        Ok(Command::Rm(Rm { target, profile }))
     }
 }
 
@@ -206,7 +202,7 @@ mod tests {
     #[test]
     fn test_add_basic() {
         if let Command::Add(a) = parse_vec(&["add", "tmux/work"]).unwrap() {
-            assert_eq!(a.tool, "tmux");
+            assert_eq!(a.target, "tmux");
             assert_eq!(a.profile, "work");
             assert!(a.to_register.is_none());
             assert!(!a.force);
@@ -226,7 +222,7 @@ mod tests {
     #[test]
     fn test_use() {
         if let Command::Use(u) = parse_vec(&["use", "tmux/work"]).unwrap() {
-            assert_eq!(u.tool, "tmux");
+            assert_eq!(u.target, "tmux");
             assert_eq!(u.profile, "work");
         }
     }
@@ -234,17 +230,17 @@ mod tests {
     #[test]
     fn test_list() {
         if let Command::List(l) = parse_vec(&["list"]).unwrap() {
-            assert!(l.tool.is_none());
+            assert!(l.target.is_none());
         }
         if let Command::List(l) = parse_vec(&["list", "tmux"]).unwrap() {
-            assert_eq!(l.tool.unwrap(), "tmux");
+            assert_eq!(l.target.unwrap(), "tmux");
         }
     }
 
     #[test]
-    fn test_rm_tool() {
+    fn test_rm_target() {
         if let Command::Rm(r) = parse_vec(&["rm", "tmux"]).unwrap() {
-            assert_eq!(r.tool, "tmux");
+            assert_eq!(r.target, "tmux");
             assert_eq!(r.profile, None);
         }
     }
@@ -252,7 +248,7 @@ mod tests {
     #[test]
     fn test_rm_profile() {
         if let Command::Rm(r) = parse_vec(&["rm", "tmux/work"]).unwrap() {
-            assert_eq!(r.tool, "tmux");
+            assert_eq!(r.target, "tmux");
             assert_eq!(r.profile, Some("work".to_string()));
         }
     }

@@ -7,18 +7,18 @@ use crate::errors::RobeError;
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Registry {
     pub base_path: PathBuf,
-    pub tools: HashMap<String, ToolRegistry>,
+    pub targets: HashMap<String, TargetRegistry>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct ToolRegistry {
+pub struct TargetRegistry {
     pub name: String,
-    pub real_path: PathBuf,
+    pub target_path: PathBuf,
     pub profiles: Vec<String>,
 }
 
-impl ToolRegistry {
-    pub fn new(name: &str, meta: &ToolMetadata, profiles: &Vec<PathBuf>) -> Self {
+impl TargetRegistry {
+    pub fn new(name: &str, meta: &TargetMetadata, profiles: &Vec<PathBuf>) -> Self {
         let mut prof: Vec<String> = Vec::new();
         for path in profiles {
             if let Some(name) = path.file_name().map(|f| f.to_string_lossy().to_string()) {
@@ -27,7 +27,7 @@ impl ToolRegistry {
         }
         Self {
             name: name.to_string(),
-            real_path: PathBuf::from(meta.real_path.clone()),
+            target_path: PathBuf::from(meta.target_path.clone()),
             profiles: prof,
         }
     }
@@ -45,26 +45,26 @@ impl ToolRegistry {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct ToolMetadata {
-    real_path: String,
+pub struct TargetMetadata {
+    target_path: String,
 }
 
-impl ToolMetadata {
+impl TargetMetadata {
     pub fn create(path: &Path) -> Self {
         Self {
-            real_path: path.to_string_lossy().to_string(),
+            target_path: path.to_string_lossy().to_string(),
         }
     }
 }
 
 impl Registry {
-    pub fn get_tool_registry(&self, tool: &str) -> Option<ToolRegistry> {
-        self.tools.get(tool).cloned()
+    pub fn get_target_registry(&self, target: &str) -> Option<TargetRegistry> {
+        self.targets.get(target).cloned()
     }
 
-    pub fn tool_registry(&self, tool: &str) -> Result<ToolRegistry, RobeError> {
-        match self.get_tool_registry(tool) {
-            None => Err(RobeError::message(format!("Tool {} not found.", tool))),
+    pub fn target_registry(&self, target: &str) -> Result<TargetRegistry, RobeError> {
+        match self.get_target_registry(target) {
+            None => Err(RobeError::message(format!("Target {} not found.", target))),
             Some(tr) => Ok(tr),
         }
     }

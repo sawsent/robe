@@ -9,13 +9,13 @@
 ## SYNOPSIS
 
 ```bash
-robe add <tool>/<profile> [-r <path>] [-f]
-robe use <tool>/<profile>
-robe list [tool]
-robe rm <tool>/<profile>
-robe rm <tool>
-robe view <tool>
-robe view <tool>/<profile>
+robe add <target>/<profile> [-r <path>] [-f]
+robe use <target>/<profile>
+robe list [target]
+robe rm <target>/<profile>
+robe rm <target>
+robe view <target>
+robe view <target>/<profile>
 ```
 
 ---
@@ -24,7 +24,7 @@ robe view <tool>/<profile>
 
 **robe** stores and activates named versions of configuration files.
 
-- Each **tool** maps to one config file  
+- Each **target** maps to one config file / directory  
 - Each **profile** is a saved copy  
 - robe only saves, switches, lists, removes, or views profiles  
 
@@ -34,17 +34,17 @@ No magic. No hidden behavior.
 
 ## TERMS
 
-| Term      | Meaning                                   |
-|-----------|-------------------------------------------|
-| tool      | program mapped to one config file         |
-| profile   | named saved copy of that file             |
+| Term      | Meaning                                       |
+|-----------|-----------------------------------------------|
+| target    | program mapped to one config file / directory |
+| profile   | named saved copy of that file / directory     |
 
 ---
 
 ## STORAGE
 
-- **Linux:** `~/.config/robe/<tool>/<profile>`  
-- **macOS:** `~/Library/Application Support/robe/<tool>/<profile>`
+- **Linux:** `~/.config/robe/wardrobe/<target>/<profile>`  
+- **macOS:** `~/Library/Application Support/robe/wardrobe/<target>/<profile>`
 
 Profiles are plain files.  
 No metadata is stored.
@@ -53,7 +53,7 @@ No metadata is stored.
 
 ## COMMANDS
 
-### add `<tool>/<profile>`
+### add `<target>/<profile>`
 Save current config as a profile.
 
 Options:
@@ -62,28 +62,28 @@ Options:
 
 ---
 
-### use `<tool>/<profile>`
+### use `<target>/<profile>`
 Activate profile.
 
 ---
 
-### list `[tool]`
-List tools or profiles.
+### list `[target]`
+List targets or profiles.
 
 ---
 
-### rm `<tool>/<profile>`
+### rm `<target>/<profile>`
 Delete a stored profile.
 
-### rm `<tool>`
-Delete all profiles for a tool.
+### rm `<target>`
+Delete all profiles for a target.
 
 ---
 
-### view `<tool>`
-Display the currently active config for a tool.
+### view `<target>`
+Display the currently active config for a target.
 
-### view `<tool>/<profile>`
+### view `<target>/<profile>`
 Display a stored profile without activating it.
 
 ---

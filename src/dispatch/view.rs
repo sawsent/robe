@@ -4,17 +4,17 @@ use crate::errors::RobeError;
 use crate::registry::Registry;
 
 pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
-    let tool_registry = registry.tool_registry(&cmd.tool)?;
+    let target_registry = registry.target_registry(&cmd.target)?;
 
     let fp = match &cmd.profile {
         Some(profile) => {
-            tool_registry.assert_profile_exists(profile)?;
+            target_registry.assert_profile_exists(profile)?;
             let mut from = registry.base_path.clone();
-            from.push(&cmd.tool);
+            from.push(&cmd.target);
             from.push(profile);
             from
         }
-        None => tool_registry.real_path,
+        None => target_registry.target_path,
     };
 
     io::print_file(&fp)?;

@@ -20,7 +20,7 @@ cargo install robe
 
 ## Quickstart
 
-Save your current config (register the file):
+Save your current config (register the file / directory):
 
 ```bash
 robe add tmux/work -r .config/tmux/tmux.conf

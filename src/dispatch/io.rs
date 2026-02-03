@@ -1,5 +1,5 @@
 use crate::errors::RobeError;
-use crate::registry::{Registry, ToolMetadata, ToolRegistry};
+use crate::registry::{Registry, TargetMetadata, TargetRegistry};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -8,29 +8,29 @@ pub fn copy_file(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     Ok(())
 }
 
-pub fn store_metadata(tool_path: &Path, meta: &ToolMetadata) -> Result<(), RobeError> {
-    let p = Path::join(tool_path, "meta.toml");
+pub fn store_metadata(target_path: &Path, meta: &TargetMetadata) -> Result<(), RobeError> {
+    let p = Path::join(target_path, "meta.toml");
     fs::write(&p, toml::to_string_pretty(meta)?)?;
     Ok(())
 }
 
 pub fn delete_profile(
     registry: &Registry,
-    tool_registry: &ToolRegistry,
+    target_registry: &TargetRegistry,
     profile: &str,
 ) -> Result<(), RobeError> {
     let mut profile_path = registry.base_path.clone();
-    profile_path.push(tool_registry.name.clone());
+    profile_path.push(target_registry.name.clone());
     profile_path.push(profile);
 
     fs::remove_file(profile_path)?;
     Ok(())
 }
 
-pub fn delete_tool(tool_name: &str, registry: &Registry) -> Result<(), RobeError> {
-    let mut tool_path = registry.base_path.clone();
-    tool_path.push(tool_name);
-    fs::remove_dir_all(tool_path)?;
+pub fn delete_target(target_name: &str, registry: &Registry) -> Result<(), RobeError> {
+    let mut target_path = registry.base_path.clone();
+    target_path.push(target_name);
+    fs::remove_dir_all(target_path)?;
     Ok(())
 }
 

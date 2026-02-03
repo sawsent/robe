@@ -9,7 +9,7 @@ mod utils;
 use dispatch::*;
 use domain::Command;
 use errors::RobeError;
-use registry::{Registry, ToolRegistry};
+use registry::{Registry, TargetRegistry};
 use settings::Settings;
 
 use std::collections::HashMap;
@@ -54,23 +54,23 @@ fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
 
     fs::create_dir_all(&fp)?;
 
-    let mut registered: HashMap<String, ToolRegistry> = HashMap::new();
+    let mut registered: HashMap<String, TargetRegistry> = HashMap::new();
 
-    for tool in utils::get_subdirs(&fp)? {
-        if let Ok(str) = fs::read_to_string(Path::join(&tool, "meta.toml"))
+    for target in utils::get_subdirs(&fp)? {
+        if let Ok(str) = fs::read_to_string(Path::join(&target, "meta.toml"))
             && let Ok(meta) = toml::from_str(&str)
         {
-            let profiles = utils::get_files_in_dir_except(&tool, "meta.toml")?;
-            if let Some(tool_name_os) = tool.file_name() {
-                let tool_name = tool_name_os.to_string_lossy().to_string();
-                let tool_registry = ToolRegistry::new(&tool_name, &meta, &profiles);
-                registered.insert(tool_name, tool_registry);
+            let profiles = utils::get_files_in_dir_except(&target, "meta.toml")?;
+            if let Some(target_name_os) = target.file_name() {
+                let target_name = target_name_os.to_string_lossy().to_string();
+                let target_registry = TargetRegistry::new(&target_name, &meta, &profiles);
+                registered.insert(target_name, target_registry);
             }
         }
     }
 
     Ok(Registry {
         base_path: fp.clone(),
-        tools: registered,
+        targets: registered,
     })
 }

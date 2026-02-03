@@ -1,18 +1,18 @@
 pub const HELP: &str = r#"robe — switch between named dotfile configurations
 
 Usage:
-  robe add <tool>/<profile> [-r <path>] [-f]
-  robe use <tool>/<profile>
-  robe list [tool]
-  robe view <tool> | <tool>/<profile>
-  robe rm <tool> | <tool>/<profile>
+  robe add <target>/<profile> [-r <path>] [-f]
+  robe use <target>/<profile>
+  robe list [target]
+  robe view <target> | <target>/<profile>
+  robe rm <target> | <target>/<profile>
 
 Commands:
   add      save current config as a profile
   use      activate a profile
-  list     list tools or profiles
+  list     list targets or profiles
   view     display current config or a stored profile
-  rm       remove a profile or all profiles of a tool
+  rm       remove a profile or all profiles of a target
 
 Options:
   -h, --help      show help
