@@ -97,7 +97,6 @@ Display a stored profile without activating it.
 
 ## GUARANTEES
 
-- single-file configs only
 - deterministic behavior
 - no hidden state
 - no background processes
@@ -107,7 +106,6 @@ Display a stored profile without activating it.
 
 ## NON-GOALS
 
-- directories
 - templating
 - repositories
 - syncing
