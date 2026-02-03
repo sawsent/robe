@@ -1,6 +1,12 @@
-# robe
+[![Crates.io](https://img.shields.io/crates/v/robe)](https://crates.io/crates/robe)
+[![Crates.io](https://img.shields.io/crates/d/robe)](https://crates.io/crates/robe)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/sawsent/robe/rust.yml?branch=main)](https://github.com/sawsent/robe/actions/workflows/rust.yml?query=branch%3Amain)
+[![Coverage Status](https://codecov.io/gh/sawsent/robe/branch/main/graph/badge.svg)](https://app.codecov.io/github/sawsent/robe)
 
 **Disclaimer: robe touches your filesystem and is in early development. Use at your own risk**
+
+# robe
 
 **Wear your configs.**
 
