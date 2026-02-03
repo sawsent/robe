@@ -8,30 +8,28 @@ pub fn copy_file(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     Ok(())
 }
 
-pub fn copy_file_or_dir(src: &PathBuf, dst: &PathBuf) -> Result<(), RobeError> {
-    if src.is_file() {
-        copy_file(src, dst)
-    } else if src.is_dir() {
-        copy_dir_all(src, dst)
+pub fn copy_file_or_dir(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
+    if from.is_file() {
+        copy_file(from, to)
+    } else if from.is_dir() {
+        copy_dir_all(from, to)
     } else {
-        Err(RobeError::Internal("Robe does not allow symlinks.".to_string()))
+        Err(RobeError::Internal(
+            "Robe does not allow symlinks.".to_string(),
+        ))
     }
 }
 
-pub fn copy_dir_all(src: &PathBuf, dst: &PathBuf) -> Result<(), RobeError> {
-    if src.is_file() {
-        return copy_file(src, dst);
+pub fn copy_dir_all(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
+    if !to.exists() {
+        fs::create_dir_all(to)?;
     }
 
-    if !dst.exists() {
-        fs::create_dir_all(&dst)?;
-    }
-
-    for entry in fs::read_dir(src)? {
+    for entry in fs::read_dir(from)? {
         let entry = entry?;
         let file_type = entry.file_type()?;
         let src_path = entry.path();
-        let dst_path = Path::join(dst, entry.file_name());
+        let dst_path = Path::join(to, entry.file_name());
 
         if file_type.is_dir() {
             copy_dir_all(&src_path, &dst_path)?;

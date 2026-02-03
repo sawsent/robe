@@ -18,7 +18,9 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
     };
 
     if fp.is_dir() {
-        println!("Robe does not support viewing directory style targets natively. View with your own editor:");
+        println!(
+            "Robe does not support viewing directory style targets natively. View with your own editor:"
+        );
         println!("{:?}", fp);
     } else {
         println!("------------------------------\n");
@@ -26,6 +28,6 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
         println!("------------------------------");
         println!("{:?}", fp);
     }
-    
+
     Ok(())
 }
