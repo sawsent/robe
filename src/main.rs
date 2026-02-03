@@ -60,7 +60,7 @@ fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
         if let Ok(str) = fs::read_to_string(Path::join(&target, "meta.toml"))
             && let Ok(meta) = toml::from_str(&str)
         {
-            let profiles = utils::get_files_in_dir_except(&target, "meta.toml")?;
+            let profiles = utils::get_profiles_from_dir(&target, "meta.toml")?;
             if let Some(target_name_os) = target.file_name() {
                 let target_name = target_name_os.to_string_lossy().to_string();
                 let target_registry = TargetRegistry::new(&target_name, &meta, &profiles);

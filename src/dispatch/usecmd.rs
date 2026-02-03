@@ -11,6 +11,6 @@ pub fn usecmd(cmd: &Use, registry: &Registry) -> Result<(), RobeError> {
     from.push(&cmd.target);
     from.push(&cmd.profile);
 
-    io::copy_file(&from, &target)?;
+    io::copy_file_or_dir(&from, &target)?;
     Ok(())
 }

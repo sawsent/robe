@@ -17,7 +17,15 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
         None => target_registry.target_path,
     };
 
-    io::print_file(&fp)?;
-
+    if fp.is_dir() {
+        println!("Robe does not support viewing directory style targets natively. View with your own editor:");
+        println!("{:?}", fp);
+    } else {
+        println!("------------------------------\n");
+        io::print_file(&fp)?;
+        println!("------------------------------");
+        println!("{:?}", fp);
+    }
+    
     Ok(())
 }

@@ -54,7 +54,7 @@ pub fn _get_files_in_dir(dir: &PathBuf) -> Result<Vec<PathBuf>, RobeError> {
     Ok(dirs)
 }
 
-pub fn get_files_in_dir_except(dir: &PathBuf, file_name: &str) -> Result<Vec<PathBuf>, RobeError> {
+pub fn get_profiles_from_dir(dir: &PathBuf, file_name: &str) -> Result<Vec<PathBuf>, RobeError> {
     let mut dirs = Vec::new();
 
     for entry in fs::read_dir(dir)? {
@@ -62,7 +62,7 @@ pub fn get_files_in_dir_except(dir: &PathBuf, file_name: &str) -> Result<Vec<Pat
         let path = entry.path();
         let f = entry.file_name().to_string_lossy().to_string();
 
-        if path.is_file() && f != file_name {
+        if f != file_name {
             dirs.push(path);
         }
     }
