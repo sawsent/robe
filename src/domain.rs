@@ -72,7 +72,6 @@ impl Add {
         let mut cmd = Add::default();
         let mut i = 0;
 
-        // First argument: target/profile
         if let Some(j) = args.get(i) {
             let (target, profile) = split_target_and_profile(j, Add::bu)?;
             cmd.target = target;
@@ -82,7 +81,6 @@ impl Add {
             return Err(Add::bu());
         }
 
-        // Optional flags
         while let Some(arg) = args.get(i) {
             match arg.as_str() {
                 "-r" | "--register" => {
@@ -114,13 +112,12 @@ impl Edit {
         RobeError::BadUsage("Usage: robe edit <target>[/<profile>]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.len() != 1 {
+        if args.is_empty() || args.len() != 1 {
             return Err(Self::bu());
         }
 
         let first = args[0].clone();
 
-        // Check if profile is included
         let (target, profile) = if first.contains('/') {
             let (t, p) = split_target_and_profile(&first, Self::bu)?;
             (t, Some(p))
@@ -136,20 +133,20 @@ impl Edit {
 pub struct View {
     pub target: String,
     pub profile: Option<String>,
+    pub raw: bool,
 }
 
 impl View {
     fn bu() -> RobeError {
-        RobeError::BadUsage("Usage: robe view <target>[/<profile>]".to_string())
+        RobeError::BadUsage("Usage: robe view <target>[/<profile>] [--raw]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.len() != 1 {
+        if args.is_empty() || args.len() > 2 {
             return Err(Self::bu());
         }
 
         let first = args[0].clone();
 
-        // Check if profile is included
         let (target, profile) = if first.contains('/') {
             let (t, p) = split_target_and_profile(&first, Self::bu)?;
             (t, Some(p))
@@ -157,7 +154,19 @@ impl View {
             (first, None)
         };
 
-        Ok(Command::View(View { target, profile }))
+        let mut raw = false;
+        if let Some(r) = args.get(1) {
+            match r.as_str() {
+                "--raw" => raw = true,
+                _ => return Err(RobeError::BadUsage(Self::bu().to_string())),
+            }
+        }
+
+        Ok(Command::View(View {
+            target,
+            profile,
+            raw,
+        }))
     }
 }
 
@@ -172,7 +181,7 @@ impl Use {
         RobeError::BadUsage("Usage: robe use <target>/<profile>".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.len() != 1 {
+        if args.is_empty() || args.len() != 1 {
             Err(Self::bu())
         } else {
             let first = args[0].clone();
@@ -212,7 +221,7 @@ impl Rm {
         RobeError::BadUsage("Usage: robe rm <target>[/<profile>]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.len() != 1 {
+        if args.is_empty() || args.len() != 1 {
             return Err(Self::bu());
         }
 
@@ -306,6 +315,16 @@ mod tests {
         if let Command::View(v) = parse_vec(&["view", "tmux"]).unwrap() {
             assert_eq!(v.target, "tmux");
             assert!(v.profile.is_none());
+            assert!(!v.raw);
+        }
+    }
+
+    #[test]
+    fn test_view_target_only_raw() {
+        if let Command::View(v) = parse_vec(&["view", "tmux", "--raw"]).unwrap() {
+            assert_eq!(v.target, "tmux");
+            assert!(v.profile.is_none());
+            assert!(v.raw);
         }
     }
 
@@ -314,6 +333,16 @@ mod tests {
         if let Command::View(v) = parse_vec(&["view", "tmux/work"]).unwrap() {
             assert_eq!(v.target, "tmux");
             assert_eq!(v.profile, Some("work".into()));
+            assert!(!v.raw);
+        }
+    }
+
+    #[test]
+    fn test_view_profile_raw() {
+        if let Command::View(v) = parse_vec(&["view", "tmux/work", "--raw"]).unwrap() {
+            assert_eq!(v.target, "tmux");
+            assert_eq!(v.profile, Some("work".into()));
+            assert!(v.raw);
         }
     }
 

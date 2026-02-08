@@ -6,11 +6,10 @@ robe — switch between named dotfile configurations
 ## SYNOPSIS
 `robe add <target>/<profile> [-r <path>] [-f]`  
 `robe use <target>/<profile>`  
-`robe view <target>[/profile]`  
+`robe view <target>[/profile] [--raw]`  
 `robe edit <target>[/profile]`  
 `robe list [target]`  
-`robe rm <target>/<profile>`  
-`robe rm <target>`  
+`robe rm <target>[/<profile>]`  
 
 ## DESCRIPTION
 robe stores and activates named versions of configuration files or directories.
@@ -40,10 +39,11 @@ No metadata is stored.
 `use <target>/<profile>`  
     activate profile  
 
-`view <target>[/profile]`  
+`view <target>[/profile] [--raw]`  
     print contents to stdout  
     file → prints contents  
     dir  → lists entries  
+    `--raw` skips headers and formatting for piping
 
 `edit <target>[/profile]`  
     open config or profile in `$EDITOR`  
@@ -51,7 +51,7 @@ No metadata is stored.
 `list [target]`  
     list targets or profiles  
 
-`rm <target>/<profile>`  
+`rm <target>[/<profile>]`  
     delete a stored profile  
 
 `rm <target>`  

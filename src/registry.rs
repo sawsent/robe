@@ -44,7 +44,7 @@ impl TargetRegistry {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct TargetMetadata {
     real_path: String,
 }

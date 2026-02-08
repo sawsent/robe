@@ -38,4 +38,4 @@ pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> St
     )
 }
 
-pub const VERSION: &str = "robe version 0.0.5";
+pub const VERSION: &str = "robe version 0.0.6";

@@ -192,4 +192,27 @@ mod tests {
         assert!(!target_path.exists());
         Ok(())
     }
+
+    #[test]
+    fn test_store_metadata() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+
+        let real_path = dir.path().join("real_path");
+        fs::write(&real_path, "")?;
+
+        let meta = TargetMetadata::create(&PathBuf::from(dir.path().join("real_path")))?;
+
+        store_metadata(&dir.path(), &meta)?;
+
+        let expected_meta_path = dir.path().join("meta.toml");
+        assert!(expected_meta_path.exists());
+
+        let s = fs::read_to_string(expected_meta_path)?;
+
+        let extracted_meta: TargetMetadata = toml::from_str(&s)?;
+
+        assert!(meta == extracted_meta);
+
+        Ok(())
+    }
 }

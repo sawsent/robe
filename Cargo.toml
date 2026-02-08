@@ -1,6 +1,6 @@
 [package]
 name = "robe"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2024"
 authors = ["Vicente Figueiredo <vicenteppfigueiredo@gmail.com>"]
 description = "Wear your configs: a tiny CLI for saving and switching between dotfile configurations"
