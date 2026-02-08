@@ -13,7 +13,7 @@ pub struct Registry {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TargetRegistry {
     pub name: String,
-    pub target_path: PathBuf,
+    pub real_path: PathBuf,
     pub profiles: Vec<String>,
 }
 
@@ -27,7 +27,7 @@ impl TargetRegistry {
         }
         Self {
             name: name.to_string(),
-            target_path: PathBuf::from(meta.target_path.clone()),
+            real_path: PathBuf::from(meta.real_path.clone()),
             profiles: prof,
         }
     }
@@ -46,14 +46,15 @@ impl TargetRegistry {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TargetMetadata {
-    target_path: String,
+    real_path: String,
 }
 
 impl TargetMetadata {
-    pub fn create(path: &Path) -> Self {
-        Self {
-            target_path: path.to_string_lossy().to_string(),
-        }
+    pub fn create(path: &Path) -> Result<Self, RobeError> {
+        let tp = path.canonicalize()?;
+        Ok(Self {
+            real_path: tp.to_string_lossy().to_string(),
+        })
     }
 }
 

@@ -14,7 +14,7 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
             from.push(profile);
             from
         }
-        None => target_registry.target_path,
+        None => target_registry.real_path,
     };
 
     if fp.is_dir() {

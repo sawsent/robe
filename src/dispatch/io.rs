@@ -76,3 +76,137 @@ pub fn print_file(fp: &Path) -> Result<(), RobeError> {
     println!("{}", fstr);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use std::fs::{self};
+    use std::path::PathBuf;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_copy_file() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("a.txt");
+        let dst = dir.path().join("b.txt");
+
+        fs::write(&src, "hello")?;
+        copy_file(&src, &dst)?;
+
+        assert!(dst.exists());
+        assert_eq!(fs::read_to_string(dst)?, "hello");
+        Ok(())
+    }
+
+    #[test]
+    fn test_copy_dir_all() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("src");
+        let dst = dir.path().join("dst");
+
+        fs::create_dir_all(&src)?;
+        fs::write(src.join("f1.txt"), "file1")?;
+        fs::create_dir(src.join("sub"))?;
+        fs::write(src.join("sub").join("f2.txt"), "file2")?;
+
+        copy_dir_all(&src, &dst)?;
+
+        assert!(dst.exists());
+        assert!(dst.join("f1.txt").exists());
+        assert_eq!(fs::read_to_string(dst.join("f1.txt"))?, "file1");
+        assert!(dst.join("sub").join("f2.txt").exists());
+        assert_eq!(fs::read_to_string(dst.join("sub").join("f2.txt"))?, "file2");
+        Ok(())
+    }
+
+    #[test]
+    fn test_copy_file_or_dir_file() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("f.txt");
+        let dst = dir.path().join("g.txt");
+
+        fs::write(&src, "hi")?;
+        copy_file_or_dir(&src, &dst)?;
+
+        assert_eq!(fs::read_to_string(dst)?, "hi");
+        Ok(())
+    }
+
+    #[test]
+    fn test_copy_file_or_dir_dir() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("src");
+        let dst = dir.path().join("dst");
+
+        fs::create_dir_all(src.join("sub"))?;
+        fs::write(src.join("sub").join("f.txt"), "hi")?;
+
+        copy_file_or_dir(&src, &dst)?;
+
+        assert!(dst.join("sub").join("f.txt").exists());
+        assert_eq!(fs::read_to_string(dst.join("sub").join("f.txt"))?, "hi");
+        Ok(())
+    }
+
+    #[test]
+    fn test_delete_profile_file() -> Result<(), RobeError> {
+        let wardrobe = tempdir()?;
+
+        let target_name = "target";
+        let profile_name = "profile";
+
+        let mut target_dir = wardrobe.path().to_path_buf();
+        target_dir.push(target_name);
+
+        let mut profile_path = target_dir.clone();
+        profile_path.push(profile_name);
+
+        let target_registry = crate::registry::TargetRegistry {
+            name: target_name.into(),
+            real_path: PathBuf::from("_"),
+            profiles: vec![profile_name.to_string()],
+        };
+
+        let mut targets = HashMap::new();
+        targets.insert(target_name.to_string(), target_registry.clone());
+
+        let registry = crate::registry::Registry {
+            base_path: wardrobe.path().to_path_buf(),
+            targets: targets,
+        };
+
+        delete_profile(&registry, &target_registry, profile_name)?;
+
+        assert!(!profile_path.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_delete_target() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let target_path = dir.path().join("target");
+        fs::create_dir_all(&target_path)?;
+
+        let registry = crate::registry::Registry {
+            base_path: dir.path().to_path_buf(),
+            targets: HashMap::new(),
+        };
+
+        delete_target("target", &registry)?;
+
+        assert!(!target_path.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_print_file() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let f = dir.path().join("f.txt");
+        fs::write(&f, "hello world")?;
+
+        // just run to check no panic; capturing stdout is more complex
+        print_file(&f)?;
+        Ok(())
+    }
+}

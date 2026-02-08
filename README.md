@@ -10,9 +10,9 @@
 
 **Wear your configs.**
 
-`robe` is a tiny CLI for saving and switching between dotfile configurations.
+`robe` is a tiny CLI for saving and switching between named configuration files or directories.
 
-Keep multiple versions.  
+Keep versions.  
 Switch instantly.  
 Nothing else.
 
@@ -28,31 +28,29 @@ cargo install robe
 
 ## Quickstart
 
-Save your current config (register the file / directory):
+Register and save:
 
 ```bash
-robe add tmux/work -r .config/tmux/tmux.conf
+robe add tmux/work -r .config/tmux
 ```
 
-Save another config:
+Create another profile:
 
 ```bash
-robe add tmux/clean
+robe add tmux/minimal
 ```
 
-Switch anytime:
+Switch:
 
 ```bash
 robe use tmux/work
-robe use tmux/clean
 ```
 
-View current or stored configs:
+Inspect:
+
 ```bash
-# Current config
-robe view tmux
-# Stored 'clean' config
-robe view tmux/clean
+robe view tmux/work
+robe edit tmux/work
 ```
 
 ---
@@ -61,27 +59,19 @@ robe view tmux/clean
 
 - stores named config profiles
 - switches between them quickly
-- keeps everything as plain files
-
----
-
-## What it doesn’t do
-
-No templating.  
-No repo management.  
-No environments.  
-No magic.
+- prints or edits with standard Unix tools ($EDITOR)
+- keeps everything as plain files or directories
 
 ---
 
 ## Docs
 
-Full spec and behavior:  
-See [docs/spec.md](docs/spec.md)
+Full behavior and spec:  
+See `docs/spec.md`
 
 ---
 
 ## License
 
-Licensed under the Apache License, Version 2.0.  
-See the [LICENSE](LICENSE) file for details.
+Apache License 2.0
+

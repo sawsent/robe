@@ -6,7 +6,7 @@ use crate::registry::Registry;
 pub fn usecmd(cmd: &Use, registry: &Registry) -> Result<(), RobeError> {
     let target_registry = registry.target_registry(&cmd.target)?;
     target_registry.assert_profile_exists(&cmd.profile)?;
-    let target = target_registry.target_path;
+    let target = target_registry.real_path;
     let mut from = registry.base_path.clone();
     from.push(&cmd.target);
     from.push(&cmd.profile);

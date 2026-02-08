@@ -14,9 +14,9 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
             )));
         }
 
-        let target_path = Path::join(&registry.base_path, &cmd.target);
+        let robe_target_path = Path::join(&registry.base_path, &cmd.target);
 
-        let mut real_path = target_registry.target_path.clone();
+        let mut real_path = target_registry.real_path.clone();
 
         if let Some(register_path) = cmd.to_register.clone() {
             if !cmd.force {
@@ -26,7 +26,7 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
                 )));
             }
             real_path = register_path.clone();
-            io::store_metadata(&target_path, &TargetMetadata::create(&register_path))?;
+            io::store_metadata(&robe_target_path, &TargetMetadata::create(&register_path)?)?;
         }
 
         let mut target_path = registry.base_path.clone();
@@ -39,7 +39,7 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
         let mut target_path = target_path.clone();
         fs::create_dir_all(&target_path)?;
 
-        let meta = TargetMetadata::create(&register_path);
+        let meta = TargetMetadata::create(&register_path)?;
 
         io::store_metadata(&target_path, &meta)?;
 

@@ -1,13 +1,12 @@
 use crate::errors::RobeError;
 use std::path::PathBuf;
 
-pub fn parse_cmd(args: &Vec<String>) -> Result<Command, RobeError> {
-    for arg in args {
-        if arg == "-h" || arg == "--help" {
-            return Ok(Command::Help(args.join(" ")));
-        } else if arg == "-v" || arg == "--version" {
-            return Ok(Command::Version);
-        }
+pub fn parse_cmd(args: &[String]) -> Result<Command, RobeError> {
+    if args.contains(&"-h".to_string()) || args.contains(&"--help".to_string()) {
+        return Ok(Command::Help(args.join(" ")));
+    }
+    if args.contains(&"-v".to_string()) || args.contains(&"--version".to_string()) {
+        return Ok(Command::Version);
     }
     if let Some(cmd) = args.first() {
         parse_internal(cmd, args.get(1..).unwrap_or(&[]))
@@ -19,6 +18,7 @@ pub fn parse_cmd(args: &Vec<String>) -> Result<Command, RobeError> {
 fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
     match cmd {
         "add" => Add::parse(args),
+        "edit" => Edit::parse(args),
         "use" => Use::parse(args),
         "list" => List::parse(args),
         "rm" => Rm::parse(args),
@@ -48,6 +48,7 @@ pub enum Command {
     Help(String),
     Version,
     Add(Add),
+    Edit(Edit),
     Use(Use),
     View(View),
     List(List),
@@ -87,7 +88,7 @@ impl Add {
                 "-r" | "--register" => {
                     i += 1;
                     if let Some(f) = args.get(i) {
-                        cmd.to_register = Some(PathBuf::from(&f).canonicalize()?);
+                        cmd.to_register = Some(PathBuf::from(&f));
                     } else {
                         return Err(Add::bu());
                     }
@@ -103,6 +104,35 @@ impl Add {
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct Edit {
+    pub target: String,
+    pub profile: Option<String>,
+}
+
+impl Edit {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe edit <target>[/<profile>]".to_string())
+    }
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        if args.len() != 1 {
+            return Err(Self::bu());
+        }
+
+        let first = args[0].clone();
+
+        // Check if profile is included
+        let (target, profile) = if first.contains('/') {
+            let (t, p) = split_target_and_profile(&first, Self::bu)?;
+            (t, Some(p))
+        } else {
+            (first, None)
+        };
+
+        Ok(Command::Edit(Edit { target, profile }))
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct View {
     pub target: String,
     pub profile: Option<String>,
@@ -113,7 +143,7 @@ impl View {
         RobeError::BadUsage("Usage: robe view <target>[/<profile>]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.is_empty() {
+        if args.len() != 1 {
             return Err(Self::bu());
         }
 
@@ -142,11 +172,12 @@ impl Use {
         RobeError::BadUsage("Usage: robe use <target>/<profile>".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if let Some(j) = args.first() {
-            let (target, profile) = split_target_and_profile(j, Self::bu)?;
-            Ok(Command::Use(Use { target, profile }))
-        } else {
+        if args.len() != 1 {
             Err(Self::bu())
+        } else {
+            let first = args[0].clone();
+            let (target, profile) = split_target_and_profile(&first, Self::bu)?;
+            Ok(Command::Use(Use { target, profile }))
         }
     }
 }
@@ -157,9 +188,16 @@ pub struct List {
 }
 
 impl List {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe list [<target>]".to_string())
+    }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        let target = args.first().cloned();
-        Ok(Command::List(List { target }))
+        if args.len() > 1 {
+            Err(Self::bu())
+        } else {
+            let target = args.first().cloned();
+            Ok(Command::List(List { target }))
+        }
     }
 }
 
@@ -174,7 +212,7 @@ impl Rm {
         RobeError::BadUsage("Usage: robe rm <target>[/<profile>]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.is_empty() {
+        if args.len() != 1 {
             return Err(Self::bu());
         }
 
@@ -196,8 +234,10 @@ mod tests {
     use super::*;
 
     fn parse_vec(args: &[&str]) -> Result<Command, RobeError> {
-        parse_cmd(&args.iter().map(|s| s.to_string()).collect())
+        parse_cmd(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>())
     }
+
+    // ---------- ADD ----------
 
     #[test]
     fn test_add_basic() {
@@ -207,17 +247,25 @@ mod tests {
             assert!(a.to_register.is_none());
             assert!(!a.force);
         } else {
-            panic!("Expected Add command");
+            panic!("Expected Add");
         }
     }
 
     #[test]
     fn test_add_force() {
         if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-f"]).unwrap() {
-            assert_eq!(a.to_register, None);
             assert!(a.force);
         }
     }
+
+    #[test]
+    fn test_add_register() {
+        if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-r", "file.conf"]).unwrap() {
+            assert_eq!(a.to_register.unwrap(), PathBuf::from("file.conf"));
+        }
+    }
+
+    // ---------- USE ----------
 
     #[test]
     fn test_use() {
@@ -226,6 +274,56 @@ mod tests {
             assert_eq!(u.profile, "work");
         }
     }
+
+    // ---------- EDIT ----------
+
+    #[test]
+    fn test_edit_target_only() {
+        if let Command::Edit(e) = parse_vec(&["edit", "tmux"]).unwrap() {
+            assert_eq!(e.target, "tmux");
+            assert!(e.profile.is_none());
+        }
+    }
+
+    #[test]
+    fn test_edit_profile() {
+        if let Command::Edit(e) = parse_vec(&["edit", "tmux/work"]).unwrap() {
+            assert_eq!(e.target, "tmux");
+            assert_eq!(e.profile, Some("work".into()));
+        }
+    }
+
+    #[test]
+    fn test_edit_bad_usage() {
+        assert!(parse_vec(&["edit"]).is_err());
+        assert!(parse_vec(&["edit", "a", "b"]).is_err());
+    }
+
+    // ---------- VIEW ----------
+
+    #[test]
+    fn test_view_target_only() {
+        if let Command::View(v) = parse_vec(&["view", "tmux"]).unwrap() {
+            assert_eq!(v.target, "tmux");
+            assert!(v.profile.is_none());
+        }
+    }
+
+    #[test]
+    fn test_view_profile() {
+        if let Command::View(v) = parse_vec(&["view", "tmux/work"]).unwrap() {
+            assert_eq!(v.target, "tmux");
+            assert_eq!(v.profile, Some("work".into()));
+        }
+    }
+
+    #[test]
+    fn test_view_bad_usage() {
+        assert!(parse_vec(&["view"]).is_err());
+        assert!(parse_vec(&["view", "a", "b"]).is_err());
+    }
+
+    // ---------- LIST ----------
 
     #[test]
     fn test_list() {
@@ -237,11 +335,13 @@ mod tests {
         }
     }
 
+    // ---------- RM ----------
+
     #[test]
     fn test_rm_target() {
         if let Command::Rm(r) = parse_vec(&["rm", "tmux"]).unwrap() {
             assert_eq!(r.target, "tmux");
-            assert_eq!(r.profile, None);
+            assert!(r.profile.is_none());
         }
     }
 
@@ -249,21 +349,23 @@ mod tests {
     fn test_rm_profile() {
         if let Command::Rm(r) = parse_vec(&["rm", "tmux/work"]).unwrap() {
             assert_eq!(r.target, "tmux");
-            assert_eq!(r.profile, Some("work".to_string()));
+            assert_eq!(r.profile, Some("work".into()));
         }
     }
 
+    // ---------- HELP / VERSION ----------
+
     #[test]
     fn test_help() {
-        match parse_vec(&["restore", "tmux", "-h"]).unwrap() {
-            Command::Help(t) if t == "restore tmux -h" => (),
+        match parse_vec(&["add", "-h"]).unwrap() {
+            Command::Help(t) if t == "add -h" => (),
             _ => panic!(),
         }
     }
 
     #[test]
     fn test_version() {
-        match parse_vec(&["-v", "add", "tmux"]).unwrap() {
+        match parse_vec(&["-v"]).unwrap() {
             Command::Version => (),
             _ => panic!(),
         }

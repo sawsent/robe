@@ -3,20 +3,32 @@ pub const HELP: &str = r#"robe — switch between named dotfile configurations
 Usage:
   robe add <target>/<profile> [-r <path>] [-f]
   robe use <target>/<profile>
+  robe view <target>[/profile]
+  robe edit <target>[/profile]
   robe list [target]
-  robe view <target> | <target>/<profile>
-  robe rm <target> | <target>/<profile>
+  robe rm <target>/<profile>
+  robe rm <target>
 
 Commands:
-  add      save current config as a profile
-  use      activate a profile
-  list     list targets or profiles
-  view     display current config or a stored profile
-  rm       remove a profile or all profiles of a target
+  add       save current config as a profile
+            -r, --register <path>  register file or directory to manage
+            -f, --force            overwrite existing profile or registration
+
+  use       activate a profile
+
+  view      print config contents
+            file → prints contents
+            dir  → lists entries
+
+  edit      open config in $EDITOR (defaults to vi)
+
+  list      list targets or profiles
+
+  rm        remove a stored profile or all profiles of a target
 
 Options:
-  -h, --help      show help
-  -v, --version   show version
+  -h, --help       show help
+  -v, --version    show version
 "#;
 
 pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> String {
@@ -26,4 +38,4 @@ pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> St
     )
 }
 
-pub const VERSION: &str = "robe version 0.1.0";
+pub const VERSION: &str = "robe version 0.0.5";

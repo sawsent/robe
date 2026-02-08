@@ -35,6 +35,7 @@ fn _main() -> Result<(), RobeError> {
 
     match command {
         Command::Add(add) => add::add(&add, &registry)?,
+        Command::Edit(edit) => edit::edit(&edit, &registry)?,
         Command::Use(usecmd) => usecmd::usecmd(&usecmd, &registry)?,
         Command::Rm(rm) => rm::rm(&rm, &registry)?,
         Command::List(ls) => list::list(&ls, &registry)?,
