@@ -1,8 +1,8 @@
 use crate::domain::View;
 use crate::errors::RobeError;
 use crate::registry::Registry;
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
     let target_registry = registry.target_registry(&cmd.target)?;
@@ -18,7 +18,7 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
         None => target_registry.real_path,
     };
 
-    view_file_or_dir(&fp)?; 
+    view_file_or_dir(&fp)?;
 
     Ok(())
 }
@@ -28,9 +28,7 @@ fn view_file_or_dir(fp: &Path) -> Result<(), RobeError> {
         println!("Directory: {}\n", fp.display());
 
         // collect entries and sort alphabetically
-        let mut entries: Vec<_> = fs::read_dir(fp)?
-            .filter_map(|e| e.ok())
-            .collect();
+        let mut entries: Vec<_> = fs::read_dir(fp)?.filter_map(|e| e.ok()).collect();
 
         entries.sort_by_key(|e| e.file_name());
 

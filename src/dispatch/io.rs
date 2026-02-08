@@ -192,5 +192,4 @@ mod tests {
         assert!(!target_path.exists());
         Ok(())
     }
-
 }
