@@ -71,12 +71,6 @@ pub fn delete_target(target_name: &str, registry: &Registry) -> Result<(), RobeE
     Ok(())
 }
 
-pub fn print_file(fp: &Path) -> Result<(), RobeError> {
-    let fstr = fs::read_to_string(fp)?;
-    println!("{}", fstr);
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,14 +193,4 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_print_file() -> Result<(), RobeError> {
-        let dir = tempdir()?;
-        let f = dir.path().join("f.txt");
-        fs::write(&f, "hello world")?;
-
-        // just run to check no panic; capturing stdout is more complex
-        print_file(&f)?;
-        Ok(())
-    }
 }

@@ -1,7 +1,8 @@
-use crate::dispatch::io;
 use crate::domain::View;
 use crate::errors::RobeError;
 use crate::registry::Registry;
+use std::path::Path;
+use std::fs;
 
 pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
     let target_registry = registry.target_registry(&cmd.target)?;
@@ -17,16 +18,36 @@ pub fn view(cmd: &View, registry: &Registry) -> Result<(), RobeError> {
         None => target_registry.real_path,
     };
 
+    view_file_or_dir(&fp)?; 
+
+    Ok(())
+}
+
+fn view_file_or_dir(fp: &Path) -> Result<(), RobeError> {
     if fp.is_dir() {
-        println!(
-            "Robe does not support viewing directory style targets natively. View with your own editor:"
-        );
-        println!("{:?}", fp);
+        println!("Directory: {}\n", fp.display());
+
+        // collect entries and sort alphabetically
+        let mut entries: Vec<_> = fs::read_dir(fp)?
+            .filter_map(|e| e.ok())
+            .collect();
+
+        entries.sort_by_key(|e| e.file_name());
+
+        for entry in entries {
+            let f = entry.file_name();
+            let fname = f.to_string_lossy();
+            let marker = if entry.path().is_dir() { "/" } else { "" };
+            println!(" - {}{}", fname, marker);
+        }
+
+        println!("\nPath: {}", fp.display());
     } else {
+        println!("File: {}\n", fp.display());
         println!("------------------------------\n");
-        io::print_file(&fp)?;
+        println!("{}", fs::read_to_string(fp)?);
         println!("------------------------------");
-        println!("{:?}", fp);
+        println!("Path: {}", fp.display());
     }
 
     Ok(())
