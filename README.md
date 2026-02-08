@@ -67,7 +67,7 @@ robe edit tmux/work
 ## Docs
 
 Full behavior and spec:  
-See `docs/spec.md`
+See [docs/spec.md](docs/spec.md)
 
 ---
 
