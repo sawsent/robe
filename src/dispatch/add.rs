@@ -33,7 +33,7 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
         target_path.push(cmd.target.clone());
         target_path.push(cmd.profile.clone());
 
-        io::copy_file_or_dir(&real_path, &target_path)?;
+        io::replace_file_or_dir(&real_path, &target_path)?;
     } else if let Some(register_path) = cmd.to_register.clone() {
         let target_path = Path::join(&registry.base_path, &cmd.target);
         let mut target_path = target_path.clone();
@@ -45,7 +45,7 @@ pub fn add(cmd: &Add, registry: &Registry) -> Result<(), RobeError> {
 
         target_path.push(cmd.profile.clone());
 
-        io::copy_file_or_dir(&register_path, &target_path)?;
+        io::replace_file_or_dir(&register_path, &target_path)?;
     } else {
         return Err(RobeError::message(format!(
             "Target {} not registered. Use -r <file> to register.",

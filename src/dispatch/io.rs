@@ -8,11 +8,11 @@ pub fn copy_file(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     Ok(())
 }
 
-pub fn copy_file_or_dir(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
+pub fn replace_file_or_dir(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     if from.is_file() {
         copy_file(from, to)
     } else if from.is_dir() {
-        copy_dir_all(from, to)
+        replace_dir_all(from, to)
     } else {
         Err(RobeError::Internal(
             "Robe does not allow symlinks.".to_string(),
@@ -20,7 +20,11 @@ pub fn copy_file_or_dir(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     }
 }
 
-pub fn copy_dir_all(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
+pub fn replace_dir_all(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
+    if to.exists() {
+        clean_directory(to)?;
+    }
+
     if !to.exists() {
         fs::create_dir_all(to)?;
     }
@@ -32,9 +36,22 @@ pub fn copy_dir_all(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
         let dst_path = Path::join(to, entry.file_name());
 
         if file_type.is_dir() {
-            copy_dir_all(&src_path, &dst_path)?;
+            replace_dir_all(&src_path, &dst_path)?;
         } else {
             fs::copy(src_path, dst_path)?;
+        }
+    }
+    Ok(())
+}
+
+fn clean_directory(target: &PathBuf) -> Result<(), RobeError> {
+    for entry in fs::read_dir(target)? {
+        let entry = entry?;
+        let file_t = entry.file_type()?;
+        if file_t.is_dir() {
+            fs::remove_dir_all(entry.path())?;
+        } else {
+            fs::remove_file(entry.path())?;
         }
     }
     Ok(())
@@ -104,7 +121,7 @@ mod tests {
         fs::create_dir(src.join("sub"))?;
         fs::write(src.join("sub").join("f2.txt"), "file2")?;
 
-        copy_dir_all(&src, &dst)?;
+        replace_dir_all(&src, &dst)?;
 
         assert!(dst.exists());
         assert!(dst.join("f1.txt").exists());
@@ -115,20 +132,20 @@ mod tests {
     }
 
     #[test]
-    fn test_copy_file_or_dir_file() -> Result<(), RobeError> {
+    fn test_replace_file_or_dir_file() -> Result<(), RobeError> {
         let dir = tempdir()?;
         let src = dir.path().join("f.txt");
         let dst = dir.path().join("g.txt");
 
         fs::write(&src, "hi")?;
-        copy_file_or_dir(&src, &dst)?;
+        replace_file_or_dir(&src, &dst)?;
 
         assert_eq!(fs::read_to_string(dst)?, "hi");
         Ok(())
     }
 
     #[test]
-    fn test_copy_file_or_dir_dir() -> Result<(), RobeError> {
+    fn test_replace_file_or_dir_dir() -> Result<(), RobeError> {
         let dir = tempdir()?;
         let src = dir.path().join("src");
         let dst = dir.path().join("dst");
@@ -136,10 +153,34 @@ mod tests {
         fs::create_dir_all(src.join("sub"))?;
         fs::write(src.join("sub").join("f.txt"), "hi")?;
 
-        copy_file_or_dir(&src, &dst)?;
+        replace_file_or_dir(&src, &dst)?;
 
         assert!(dst.join("sub").join("f.txt").exists());
         assert_eq!(fs::read_to_string(dst.join("sub").join("f.txt"))?, "hi");
+        Ok(())
+    }
+
+    #[test]
+    fn test_replace_file_or_dir_dir_should_delete_old_files() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("src");
+        let dst = dir.path().join("dst");
+
+        fs::create_dir_all(dst.join("sub"))?;
+        fs::write(dst.join("sub").join("f1.txt"), "hi")?;
+        fs::write(dst.join("sub").join("f2.txt"), "hi")?;
+        fs::write(dst.join("sub").join("f3.txt"), "hi")?;
+
+        fs::create_dir_all(src.join("sub"))?;
+        fs::write(src.join("sub").join("f1.txt"), "hi 2")?;
+
+        replace_file_or_dir(&src, &dst)?;
+
+        assert!(dst.join("sub").join("f1.txt").exists());
+        assert!(!dst.join("sub").join("f2.txt").exists());
+        assert!(!dst.join("sub").join("f3.txt").exists());
+        assert_eq!(fs::read_to_string(dst.join("sub").join("f1.txt"))?, "hi 2");
+        assert_eq!(fs::read_to_string(src.join("sub").join("f1.txt"))?, "hi 2");
         Ok(())
     }
 
@@ -213,6 +254,28 @@ mod tests {
 
         assert!(meta == extracted_meta);
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_clean_dir() -> Result<(), RobeError> {
+        let dir = tempdir()?;
+        let src = dir.path().join("src");
+
+        fs::create_dir_all(src.join("sub1"))?;
+        fs::write(src.join("sub1").join("f1.txt"), "mock")?;
+        fs::write(src.join("sub1").join("f2.txt"), "mock")?;
+
+        fs::create_dir_all(src.join("sub2"))?;
+        fs::write(src.join("sub2").join("f1.txt"), "mock")?;
+        fs::write(src.join("sub2").join("f2.txt"), "mock")?;
+        fs::write(src.join("sub2").join("f3.txt"), "mock")?;
+        fs::write(src.join("sub2").join("f4.txt"), "mock")?;
+
+        clean_directory(&src)?;
+
+        assert!(src.exists());
+        assert!(src.read_dir()?.count() == 0);
         Ok(())
     }
 }

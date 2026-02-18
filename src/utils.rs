@@ -69,3 +69,105 @@ pub fn get_profiles_from_dir(dir: &PathBuf, file_name: &str) -> Result<Vec<PathB
 
     Ok(dirs)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{self, File};
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_settings_file_path_contains_expected_suffix() {
+        let path = settings_file_path();
+        assert!(path.ends_with("robe/config.toml"));
+    }
+
+    #[test]
+    fn test_get_settings_valid_file() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("config.toml");
+
+        let mut file = File::create(&file_path).unwrap();
+        writeln!(file, "wardrobe = \"/tmp/robe\"").unwrap();
+
+        let settings = get_settings(&file_path.to_string_lossy().to_string());
+
+        assert_eq!(settings.wardrobe, "/tmp/robe");
+    }
+
+    #[test]
+    fn test_get_settings_invalid_file_returns_default() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("config.toml");
+
+        fs::write(&file_path, "invalid toml :::").unwrap();
+
+        let settings = get_settings(&file_path.to_string_lossy().to_string());
+
+        assert_eq!(settings, Settings::default());
+    }
+
+    #[test]
+    fn test_get_settings_missing_file_returns_default() {
+        let settings = get_settings(&"nonexistent.toml".to_string());
+        assert_eq!(settings, Settings::default());
+    }
+
+    #[test]
+    fn test_get_subdirs() {
+        let dir = tempdir().unwrap();
+
+        let sub1 = dir.path().join("a");
+        let sub2 = dir.path().join("b");
+        let file = dir.path().join("file.txt");
+
+        fs::create_dir(&sub1).unwrap();
+        fs::create_dir(&sub2).unwrap();
+        File::create(&file).unwrap();
+
+        let mut result = get_subdirs(&dir.path().to_path_buf()).unwrap();
+        result.sort();
+
+        assert_eq!(result.len(), 2);
+        assert!(result.contains(&sub1));
+        assert!(result.contains(&sub2));
+    }
+
+    #[test]
+    fn test_get_files_in_dir() {
+        let dir = tempdir().unwrap();
+
+        let file1 = dir.path().join("a.txt");
+        let file2 = dir.path().join("b.txt");
+        let sub = dir.path().join("sub");
+
+        File::create(&file1).unwrap();
+        File::create(&file2).unwrap();
+        fs::create_dir(&sub).unwrap();
+
+        let mut result = _get_files_in_dir(&dir.path().to_path_buf()).unwrap();
+        result.sort();
+
+        assert_eq!(result.len(), 2);
+        assert!(result.contains(&file1));
+        assert!(result.contains(&file2));
+    }
+
+    #[test]
+    fn test_get_profiles_from_dir_excludes_filename() {
+        let dir = tempdir().unwrap();
+
+        let keep = dir.path().join("profile1");
+        let exclude = dir.path().join("meta.toml");
+
+        fs::create_dir(&keep).unwrap();
+        File::create(&exclude).unwrap();
+
+        let result = get_profiles_from_dir(&dir.path().to_path_buf(), "meta.toml").unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert!(result.contains(&keep));
+        assert!(!result.contains(&exclude));
+    }
+}
