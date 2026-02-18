@@ -59,7 +59,7 @@ robe edit tmux/work
 
 - stores named config profiles
 - switches between them quickly
-- prints or edits with standard Unix tools ($EDITOR)
+- prints to stdout or edits with `$EDITOR`
 - keeps everything as plain files or directories
 
 ---
