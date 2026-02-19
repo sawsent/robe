@@ -9,6 +9,7 @@ robe — switch between named dotfile configurations
 `robe view <target>[/profile] [--raw]`  
 `robe edit <target>[/profile]`  
 `robe list [target]`  
+`robe ls [target]`  
 `robe rm <target>[/<profile>]`  
 
 ## DESCRIPTION
@@ -50,6 +51,9 @@ No metadata is stored.
 
 `list [target]`  
     list targets or profiles  
+
+`ls [target]`  
+    alias list  
 
 `rm <target>[/<profile>]`  
     delete a stored profile  

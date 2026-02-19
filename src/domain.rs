@@ -20,7 +20,8 @@ fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
         "add" => Add::parse(args),
         "edit" => Edit::parse(args),
         "use" => Use::parse(args),
-        "list" => List::parse(args),
+        "list" => List::parse(args, "list"),
+        "ls" => List::parse(args, "ls"),
         "rm" => Rm::parse(args),
         "view" => View::parse(args),
         other => Err(RobeError::BadUsage(format!(
@@ -197,12 +198,12 @@ pub struct List {
 }
 
 impl List {
-    fn bu() -> RobeError {
-        RobeError::BadUsage("Usage: robe list [<target>]".to_string())
+    fn bu(cmd: &str) -> RobeError {
+        RobeError::BadUsage(format!("Usage: robe {} [<target>]", cmd).to_string())
     }
-    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+    pub fn parse(args: &[String], c: &str) -> Result<Command, RobeError> {
         if args.len() > 1 {
-            Err(Self::bu())
+            Err(Self::bu(c))
         } else {
             let target = args.first().cloned();
             Ok(Command::List(List { target }))
@@ -360,6 +361,16 @@ mod tests {
             assert!(l.target.is_none());
         }
         if let Command::List(l) = parse_vec(&["list", "tmux"]).unwrap() {
+            assert_eq!(l.target.unwrap(), "tmux");
+        }
+    }
+
+    #[test]
+    fn test_list_alias_ls() {
+        if let Command::List(l) = parse_vec(&["ls"]).unwrap() {
+            assert!(l.target.is_none());
+        }
+        if let Command::List(l) = parse_vec(&["ls", "tmux"]).unwrap() {
             assert_eq!(l.target.unwrap(), "tmux");
         }
     }

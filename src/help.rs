@@ -6,6 +6,7 @@ Usage:
   robe view <target>[/profile]
   robe edit <target>[/profile]
   robe list [target]
+  robe ls [target]
   robe rm <target>/<profile>
   robe rm <target>
 
@@ -23,6 +24,7 @@ Commands:
   edit      open config in $EDITOR (defaults to vi)
 
   list      list targets or profiles
+  ls        alias list  
 
   rm        remove a stored profile or all profiles of a target
 
@@ -38,4 +40,37 @@ pub fn help_with_storage_and_config(storage_file: &str, config_file: &str) -> St
     )
 }
 
-pub const VERSION: &str = "robe version 0.0.6";
+pub const VERSION: &str = "robe version 0.0.8";
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    #[test]
+    fn test_help_with_storage_and_config() {
+        let s_file = "storage/file/path";
+        let c_file = "config/file/path";
+
+        let result = help_with_storage_and_config(s_file, c_file);
+
+        assert!(result.contains(HELP));
+        assert!(result.contains(c_file));
+        assert!(result.contains(s_file));
+    }
+
+    #[test]
+    fn test_version() {
+        if let Ok(c_version_string) = std::fs::read_to_string(PathBuf::from("Cargo.toml")) {
+            let version_vec: Vec<&str> = VERSION.split(" ").collect();
+            let version = version_vec[2];
+
+            if !c_version_string.contains(version) {
+                panic!("VERSION in help.rs not in line with Cargo.toml");
+            }
+        } else {
+            panic!("Unable to test VERSION")
+        }
+    }
+}
