@@ -1,7 +1,9 @@
 use crate::errors::RobeError;
+use crate::registry::{Registry, TargetRegistry};
 use crate::settings::Settings;
+use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn settings_file_path() -> String {
     let maybe_fp = dirs::config_local_dir().map(|mut p| {
@@ -22,6 +24,32 @@ pub fn get_settings(fp: &String) -> Settings {
         return settings;
     }
     Settings::default()
+}
+
+pub fn get_registry(settings: &Settings) -> Result<Registry, RobeError> {
+    let fp: PathBuf = PathBuf::from(&settings.wardrobe);
+
+    fs::create_dir_all(&fp)?;
+
+    let mut registered: HashMap<String, TargetRegistry> = HashMap::new();
+
+    for target in get_subdirs(&fp)? {
+        if let Ok(str) = fs::read_to_string(Path::join(&target, "meta.toml"))
+            && let Ok(meta) = toml::from_str(&str)
+        {
+            let profiles = get_profiles_from_dir(&target, "meta.toml")?;
+            if let Some(target_name_os) = target.file_name() {
+                let target_name = target_name_os.to_string_lossy().to_string();
+                let target_registry = TargetRegistry::new(&target_name, &meta, &profiles);
+                registered.insert(target_name, target_registry);
+            }
+        }
+    }
+
+    Ok(Registry {
+        base_path: fp.clone(),
+        targets: registered,
+    })
 }
 
 pub fn get_subdirs(dir: &PathBuf) -> Result<Vec<PathBuf>, RobeError> {
@@ -73,6 +101,7 @@ pub fn get_profiles_from_dir(dir: &PathBuf, file_name: &str) -> Result<Vec<PathB
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use std::fs::{self, File};
     use std::io::Write;
     use tempfile::tempdir;
@@ -169,5 +198,99 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result.contains(&keep));
         assert!(!result.contains(&exclude));
+    }
+
+    #[test]
+    fn test_get_registry_empty() {
+        let dir = tempdir().unwrap();
+
+        let settings = Settings {
+            wardrobe: dir.path().to_string_lossy().to_string(),
+        };
+
+        let registry = get_registry(&settings).unwrap();
+
+        assert_eq!(registry.targets.len(), 0);
+        assert_eq!(registry.base_path, dir.path());
+    }
+
+    #[test]
+    fn test_get_registry_single_target() {
+        let dir = tempdir().unwrap();
+        let wardrobe = dir.path();
+
+        let target_dir = wardrobe.join("tmux");
+        fs::create_dir_all(&target_dir).unwrap();
+
+        let meta = r#"
+real_path = "/tmp/tmux.conf"
+"#;
+
+        fs::write(target_dir.join("meta.toml"), meta).unwrap();
+
+        fs::create_dir(target_dir.join("work")).unwrap();
+        fs::create_dir(target_dir.join("clean")).unwrap();
+
+        let settings = Settings {
+            wardrobe: wardrobe.to_string_lossy().to_string(),
+        };
+
+        let registry = get_registry(&settings).unwrap();
+
+        assert_eq!(registry.targets.len(), 1);
+
+        let tmux = registry.targets.get("tmux").unwrap();
+        assert_eq!(tmux.name, "tmux");
+        assert_eq!(tmux.profiles.len(), 2);
+        assert!(tmux.profiles.contains(&"work".to_string()));
+        assert!(tmux.profiles.contains(&"clean".to_string()));
+    }
+
+    #[test]
+    fn test_get_registry_ignores_invalid_meta() {
+        let dir = tempdir().unwrap();
+        let wardrobe = dir.path();
+
+        let target_dir = wardrobe.join("nvim");
+        fs::create_dir_all(&target_dir).unwrap();
+
+        fs::write(target_dir.join("meta.toml"), "invalid toml").unwrap();
+
+        let settings = Settings {
+            wardrobe: wardrobe.to_string_lossy().to_string(),
+        };
+
+        let registry = get_registry(&settings).unwrap();
+
+        // invalid meta should skip this target
+        assert_eq!(registry.targets.len(), 0);
+    }
+
+    #[test]
+    fn test_get_registry_multiple_targets() {
+        let dir = tempdir().unwrap();
+        let wardrobe = dir.path();
+
+        let tmux = wardrobe.join("tmux");
+        let nvim = wardrobe.join("nvim");
+
+        fs::create_dir_all(&tmux).unwrap();
+        fs::create_dir_all(&nvim).unwrap();
+
+        fs::write(tmux.join("meta.toml"), r#"real_path = "/tmp/tmux""#).unwrap();
+        fs::write(nvim.join("meta.toml"), r#"real_path = "/tmp/nvim""#).unwrap();
+
+        fs::create_dir(tmux.join("work")).unwrap();
+        fs::create_dir(nvim.join("default")).unwrap();
+
+        let settings = Settings {
+            wardrobe: wardrobe.to_string_lossy().to_string(),
+        };
+
+        let registry = get_registry(&settings).unwrap();
+
+        assert_eq!(registry.targets.len(), 2);
+        assert!(registry.targets.contains_key("tmux"));
+        assert!(registry.targets.contains_key("nvim"));
     }
 }

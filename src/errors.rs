@@ -2,12 +2,11 @@
 pub enum RobeError {
     Internal(String),
     BadUsage(String),
-    Simple(String),
 }
 
 impl RobeError {
     pub fn message(msg: String) -> Self {
-        Self::Simple(msg)
+        Self::Internal(msg)
     }
 }
 
@@ -19,7 +18,6 @@ impl std::fmt::Display for RobeError {
                 "robe: Wrong usage. {}\nUse `robe -h` for help.",
                 err
             )),
-            Self::Simple(msg) => f.write_fmt(format_args!("robe: {}", msg)),
         }
     }
 }
@@ -39,5 +37,60 @@ impl From<toml::de::Error> for RobeError {
 impl From<toml::ser::Error> for RobeError {
     fn from(value: toml::ser::Error) -> Self {
         Self::Internal(format!("Serialization error: {}", value))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_internal() {
+        let err = RobeError::Internal("error_message".to_string());
+        let result = format!("{}", err);
+
+        assert_eq!(result, "robe: error_message");
+    }
+
+    #[test]
+    fn test_display_bad_usage() {
+        let err = RobeError::BadUsage("error_message".to_string());
+        let result = format!("{}", err);
+
+        let expected = "robe: Wrong usage. error_message\nUse `robe -h` for help.";
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_message_helper() {
+        let err = RobeError::message("hello".to_string());
+
+        match err {
+            RobeError::Internal(msg) => assert_eq!(msg, "hello"),
+            _ => panic!("Expected Internal error"),
+        }
+    }
+
+    #[test]
+    fn test_from_io_error() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::Other, "disk exploded");
+
+        let robe_err: RobeError = io_err.into();
+        let msg = format!("{}", robe_err);
+
+        assert!(msg.contains("IO error"));
+        assert!(msg.contains("disk exploded"));
+    }
+
+    #[test]
+    fn test_from_toml_deser_error() {
+        let result: Result<u32, _> = toml::from_str("not_a_number");
+
+        let err = result.unwrap_err();
+        let robe_err: RobeError = err.into();
+
+        let msg = format!("{}", robe_err);
+        assert!(msg.contains("Deserialization error"));
     }
 }
