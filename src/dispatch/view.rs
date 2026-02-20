@@ -36,7 +36,7 @@ fn format_file(fp: &Path, raw: bool) -> Result<String, RobeError> {
         out.push_str(&format!("File: {}\n", fp.display()));
         out.push_str("------------------------------\n\n");
     }
-    out.push_str(&format!("{}", fs::read_to_string(fp)?));
+    out.push_str(&fs::read_to_string(fp)?.to_string());
     if !raw {
         out.push_str("\n------------------------------\n");
         out.push_str(&format!("Path: {}", fp.display()));
