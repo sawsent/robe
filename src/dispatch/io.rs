@@ -262,6 +262,9 @@ mod tests {
         let dir = tempdir()?;
         let src = dir.path().join("src");
 
+        fs::create_dir_all(src.clone())?;
+        fs::write(src.join("f1.txt"), "mock")?;
+
         fs::create_dir_all(src.join("sub1"))?;
         fs::write(src.join("sub1").join("f1.txt"), "mock")?;
         fs::write(src.join("sub1").join("f2.txt"), "mock")?;
