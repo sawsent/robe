@@ -288,7 +288,7 @@ dependencies = [
 
 [[package]]
 name = "robe"
-version = "0.0.8"
+version = "0.0.9"
 dependencies = [
  "dirs",
  "rayon",
