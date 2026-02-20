@@ -29,6 +29,7 @@ fn _main(args: &[String]) -> Result<(), RobeError> {
 
     match command {
         Command::Add(add) => add::add(&add, &registry)?,
+        Command::Register(reg) => register::register(&reg, &registry)?,
         Command::Edit(edit) => edit::edit(&edit, &registry)?,
         Command::Use(usecmd) => usecmd::usecmd(&usecmd, &registry)?,
         Command::Rm(rm) => rm::rm(&rm, &registry)?,

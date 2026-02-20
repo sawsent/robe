@@ -35,7 +35,7 @@ No metadata is stored.
 `add <target>/<profile> [-r <path>] [-f]`  
     save current config as a profile  
     `-r` registers the path if not already registered  
-    `-f` overwrites existing data  
+    `-f` overwrites existing data (update)  
 
 `use <target>/<profile>`  
     activate profile  

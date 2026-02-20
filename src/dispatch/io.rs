@@ -23,9 +23,7 @@ pub fn replace_file_or_dir(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError
 pub fn replace_dir_all(from: &PathBuf, to: &PathBuf) -> Result<(), RobeError> {
     if to.exists() {
         clean_directory(to)?;
-    }
-
-    if !to.exists() {
+    } else {
         fs::create_dir_all(to)?;
     }
 
@@ -57,8 +55,14 @@ fn clean_directory(target: &PathBuf) -> Result<(), RobeError> {
     Ok(())
 }
 
-pub fn store_metadata(target_path: &Path, meta: &TargetMetadata) -> Result<(), RobeError> {
-    let p = Path::join(target_path, "meta.toml");
+pub fn store_metadata(
+    registry: &Registry,
+    meta: &TargetMetadata,
+    target_name: &str,
+) -> Result<(), RobeError> {
+    let target_root_dir = &registry.base_path.join(target_name);
+    let p = Path::join(target_root_dir, "meta.toml");
+    fs::create_dir_all(target_root_dir)?;
     fs::write(&p, toml::to_string_pretty(meta)?)?;
     Ok(())
 }
@@ -238,14 +242,19 @@ mod tests {
     fn test_store_metadata() -> Result<(), RobeError> {
         let dir = tempdir()?;
 
+        let registry = Registry {
+            base_path: dir.path().to_path_buf(),
+            targets: HashMap::new(),
+        };
+
         let real_path = dir.path().join("real_path");
         fs::write(&real_path, "")?;
 
         let meta = TargetMetadata::create(&PathBuf::from(dir.path().join("real_path")))?;
 
-        store_metadata(&dir.path(), &meta)?;
+        store_metadata(&registry, &meta, "target_name")?;
 
-        let expected_meta_path = dir.path().join("meta.toml");
+        let expected_meta_path = dir.path().join("target_name").join("meta.toml");
         assert!(expected_meta_path.exists());
 
         let s = fs::read_to_string(expected_meta_path)?;

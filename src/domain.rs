@@ -17,6 +17,9 @@ pub fn parse_cmd(args: &[String]) -> Result<Command, RobeError> {
 
 fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
     match cmd {
+        "add" if args.contains(&"-r".to_string()) || args.contains(&"--register".to_string()) => {
+            Register::parse(args)
+        }
         "add" => Add::parse(args),
         "edit" => Edit::parse(args),
         "use" => Use::parse(args),
@@ -49,6 +52,7 @@ pub enum Command {
     Help(String),
     Version,
     Add(Add),
+    Register(Register),
     Edit(Edit),
     Use(Use),
     View(View),
@@ -60,7 +64,6 @@ pub enum Command {
 pub struct Add {
     pub target: String,
     pub profile: String,
-    pub to_register: Option<PathBuf>,
     pub force: bool,
 }
 
@@ -70,35 +73,79 @@ impl Add {
     }
 
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        let mut cmd = Add::default();
-        let mut i = 0;
-
-        if let Some(j) = args.get(i) {
-            let (target, profile) = split_target_and_profile(j, Add::bu)?;
-            cmd.target = target;
-            cmd.profile = profile;
-            i += 1;
-        } else {
-            return Err(Add::bu());
+        if args.is_empty() {
+            return Err(Self::bu());
         }
+
+        let mut cmd = Self::default();
+        let mut i = 0;
+        let mut seen_target = false;
+
+        while let Some(arg) = args.get(i) {
+            match arg.as_str() {
+                "-f" | "--force" => cmd.force = true,
+                t if !seen_target => {
+                    let (target, profile) = split_target_and_profile(t, Self::bu)?;
+                    cmd.target = target;
+                    cmd.profile = profile;
+                    seen_target = true;
+                }
+                _ => return Err(Self::bu()),
+            }
+            i += 1;
+        }
+
+        if seen_target {
+            Ok(Command::Add(cmd))
+        } else {
+            Err(Self::bu())
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Register {
+    pub target: String,
+    pub profile: String,
+    pub register_file_path: PathBuf,
+}
+
+impl Register {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe add <target>/<profile> [-r <path>]".to_string())
+    }
+
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        let mut cmd = Register::default();
+        let mut i = 0;
+        let mut seen_target = false;
 
         while let Some(arg) = args.get(i) {
             match arg.as_str() {
                 "-r" | "--register" => {
                     i += 1;
                     if let Some(f) = args.get(i) {
-                        cmd.to_register = Some(PathBuf::from(&f));
+                        cmd.register_file_path = PathBuf::from(&f);
                     } else {
-                        return Err(Add::bu());
+                        return Err(Self::bu());
                     }
                 }
-                "-f" | "--force" => cmd.force = true,
-                _ => return Err(Add::bu()),
+                t if !seen_target => {
+                    let (target, profile) = split_target_and_profile(t, Self::bu)?;
+                    cmd.target = target;
+                    cmd.profile = profile;
+                    seen_target = true;
+                }
+                _ => return Err(Self::bu()),
             }
             i += 1;
         }
 
-        Ok(Command::Add(cmd))
+        if seen_target {
+            Ok(Command::Register(cmd))
+        } else {
+            Err(Self::bu())
+        }
     }
 }
 
@@ -113,7 +160,7 @@ impl Edit {
         RobeError::BadUsage("Usage: robe edit <target>[/<profile>]".to_string())
     }
     pub fn parse(args: &[String]) -> Result<Command, RobeError> {
-        if args.is_empty() || args.len() != 1 {
+        if args.len() != 1 {
             return Err(Self::bu());
         }
 
@@ -126,7 +173,7 @@ impl Edit {
             (first, None)
         };
 
-        Ok(Command::Edit(Edit { target, profile }))
+        Ok(Command::Edit(Self { target, profile }))
     }
 }
 
@@ -145,29 +192,34 @@ impl View {
         if args.is_empty() || args.len() > 2 {
             return Err(Self::bu());
         }
+        let mut i = 0;
+        let mut seen_target = false;
+        let mut cmd = Self::default();
 
-        let first = args[0].clone();
-
-        let (target, profile) = if first.contains('/') {
-            let (t, p) = split_target_and_profile(&first, Self::bu)?;
-            (t, Some(p))
-        } else {
-            (first, None)
-        };
-
-        let mut raw = false;
-        if let Some(r) = args.get(1) {
-            match r.as_str() {
-                "--raw" => raw = true,
-                _ => return Err(RobeError::BadUsage(Self::bu().to_string())),
+        while let Some(arg) = args.get(i) {
+            match arg.as_str() {
+                "--raw" => cmd.raw = true,
+                tp if !seen_target => {
+                    let (target, profile) = if tp.contains('/') {
+                        let (t, p) = split_target_and_profile(tp, Self::bu)?;
+                        (t, Some(p))
+                    } else {
+                        (tp.to_string(), None)
+                    };
+                    cmd.target = target;
+                    cmd.profile = profile;
+                    seen_target = true;
+                }
+                _ => return Err(Self::bu()),
             }
+            i += 1;
         }
 
-        Ok(Command::View(View {
-            target,
-            profile,
-            raw,
-        }))
+        if seen_target {
+            Ok(Command::View(cmd))
+        } else {
+            Err(Self::bu())
+        }
     }
 }
 
@@ -187,7 +239,7 @@ impl Use {
         } else {
             let first = args[0].clone();
             let (target, profile) = split_target_and_profile(&first, Self::bu)?;
-            Ok(Command::Use(Use { target, profile }))
+            Ok(Command::Use(Self { target, profile }))
         }
     }
 }
@@ -206,7 +258,7 @@ impl List {
             Err(Self::bu(c))
         } else {
             let target = args.first().cloned();
-            Ok(Command::List(List { target }))
+            Ok(Command::List(Self { target }))
         }
     }
 }
@@ -235,7 +287,7 @@ impl Rm {
             (first, None)
         };
 
-        Ok(Command::Rm(Rm { target, profile }))
+        Ok(Command::Rm(Self { target, profile }))
     }
 }
 
@@ -250,28 +302,105 @@ mod tests {
     // ---------- ADD ----------
 
     #[test]
-    fn test_add_basic() {
-        if let Command::Add(a) = parse_vec(&["add", "tmux/work"]).unwrap() {
-            assert_eq!(a.target, "tmux");
-            assert_eq!(a.profile, "work");
-            assert!(a.to_register.is_none());
-            assert!(!a.force);
-        } else {
-            panic!("Expected Add");
+    fn test_add() {
+        match parse_vec(&["add", "target/profile"]).unwrap() {
+            Command::Add(a) => {
+                assert_eq!(a.target, "target");
+                assert_eq!(a.profile, "profile");
+                assert!(!a.force);
+            }
+            _ => panic!("Expected Add"),
         }
     }
 
     #[test]
     fn test_add_force() {
-        if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-f"]).unwrap() {
-            assert!(a.force);
+        match parse_vec(&["add", "target/profile", "-f"]).unwrap() {
+            Command::Add(a) => {
+                assert!(a.force);
+            }
+            _ => panic!("Expected Add"),
+        }
+        match parse_vec(&["add", "-f", "target/profile"]).unwrap() {
+            Command::Add(a) => {
+                assert!(a.force);
+            }
+            _ => panic!("Expected Add"),
         }
     }
 
     #[test]
-    fn test_add_register() {
-        if let Command::Add(a) = parse_vec(&["add", "tmux/work", "-r", "file.conf"]).unwrap() {
-            assert_eq!(a.to_register.unwrap(), PathBuf::from("file.conf"));
+    fn test_add_bad_usage() {
+        match parse_vec(&["add", "target/profile", "-f", "other/other"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["add"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["add", "-f"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+    }
+
+    // ---------- REGISTER ----------
+
+    #[test]
+    fn test_register() {
+        match parse_vec(&["add", "target/profile", "-r", "filename"]).unwrap() {
+            Command::Register(a) => {
+                assert_eq!(a.target, "target");
+                assert_eq!(a.profile, "profile");
+                assert_eq!(a.register_file_path, PathBuf::from("filename"));
+            }
+            _ => panic!("Expected Register"),
+        }
+        match parse_vec(&["add", "--register", "file", "target/profile"]).unwrap() {
+            Command::Register(a) => {
+                assert_eq!(a.target, "target");
+                assert_eq!(a.profile, "profile");
+                assert_eq!(a.register_file_path, PathBuf::from("file"));
+            }
+            _ => panic!("Expected Register"),
+        }
+    }
+
+    #[test]
+    fn test_register_bad_usage() {
+        match parse_vec(&["add", "target/profile", "other/other", "-r", "filename"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&[
+            "add",
+            "target/profile",
+            "other/other",
+            "-r",
+            "filename",
+            "filename2",
+        ])
+        .unwrap_err()
+        {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["add", "target/profile", "-r", "filename", "-f"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("add <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
         }
     }
 
@@ -279,9 +408,32 @@ mod tests {
 
     #[test]
     fn test_use() {
-        if let Command::Use(u) = parse_vec(&["use", "tmux/work"]).unwrap() {
-            assert_eq!(u.target, "tmux");
-            assert_eq!(u.profile, "work");
+        match parse_vec(&["use", "target/profile"]).unwrap() {
+            Command::Use(u) => {
+                assert_eq!(u.target, "target");
+                assert_eq!(u.profile, "profile");
+            }
+            _ => panic!("Expected Use"),
+        }
+        if let Command::Use(u) = parse_vec(&["use", "target/profile"]).unwrap() {
+            assert_eq!(u.target, "target");
+            assert_eq!(u.profile, "profile");
+        }
+    }
+
+    #[test]
+    fn test_use_bad_usage() {
+        match parse_vec(&["use"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe use <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["use", "a", "b"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe use <target>/<profile>"));
+            }
+            _ => panic!("Expected BadUsage"),
         }
     }
 
@@ -289,107 +441,203 @@ mod tests {
 
     #[test]
     fn test_edit_target_only() {
-        if let Command::Edit(e) = parse_vec(&["edit", "tmux"]).unwrap() {
-            assert_eq!(e.target, "tmux");
-            assert!(e.profile.is_none());
+        match parse_vec(&["edit", "target"]).unwrap() {
+            Command::Edit(e) => {
+                assert_eq!(e.target, "target");
+                assert!(e.profile.is_none());
+            }
+            _ => panic!("Expected Edit"),
         }
     }
 
     #[test]
     fn test_edit_profile() {
-        if let Command::Edit(e) = parse_vec(&["edit", "tmux/work"]).unwrap() {
-            assert_eq!(e.target, "tmux");
-            assert_eq!(e.profile, Some("work".into()));
+        match parse_vec(&["edit", "target/profile"]).unwrap() {
+            Command::Edit(e) => {
+                assert_eq!(e.target, "target");
+                assert_eq!(e.profile, Some("profile".into()));
+            }
+            _ => panic!("Expected Edit"),
         }
     }
 
     #[test]
     fn test_edit_bad_usage() {
-        assert!(parse_vec(&["edit"]).is_err());
-        assert!(parse_vec(&["edit", "a", "b"]).is_err());
+        match parse_vec(&["edit"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe edit <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["edit", "a", "b"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe edit <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
     }
 
     // ---------- VIEW ----------
 
     #[test]
     fn test_view_target_only() {
-        if let Command::View(v) = parse_vec(&["view", "tmux"]).unwrap() {
-            assert_eq!(v.target, "tmux");
-            assert!(v.profile.is_none());
-            assert!(!v.raw);
+        match parse_vec(&["view", "target"]).unwrap() {
+            Command::View(v) => {
+                assert_eq!(v.target, "target");
+                assert!(v.profile.is_none());
+                assert!(!v.raw);
+            }
+            _ => panic!("Expected View"),
         }
     }
 
     #[test]
     fn test_view_target_only_raw() {
-        if let Command::View(v) = parse_vec(&["view", "tmux", "--raw"]).unwrap() {
-            assert_eq!(v.target, "tmux");
-            assert!(v.profile.is_none());
-            assert!(v.raw);
+        match parse_vec(&["view", "target", "--raw"]).unwrap() {
+            Command::View(v) => {
+                assert_eq!(v.target, "target");
+                assert!(v.profile.is_none());
+                assert!(v.raw);
+            }
+            _ => panic!("Expected View"),
         }
     }
 
     #[test]
     fn test_view_profile() {
-        if let Command::View(v) = parse_vec(&["view", "tmux/work"]).unwrap() {
-            assert_eq!(v.target, "tmux");
-            assert_eq!(v.profile, Some("work".into()));
-            assert!(!v.raw);
+        match parse_vec(&["view", "target/profile"]).unwrap() {
+            Command::View(v) => {
+                assert_eq!(v.target, "target");
+                assert_eq!(v.profile, Some("profile".into()));
+                assert!(!v.raw);
+            }
+            _ => panic!("Expected View"),
         }
     }
 
     #[test]
     fn test_view_profile_raw() {
-        if let Command::View(v) = parse_vec(&["view", "tmux/work", "--raw"]).unwrap() {
-            assert_eq!(v.target, "tmux");
-            assert_eq!(v.profile, Some("work".into()));
-            assert!(v.raw);
+        match parse_vec(&["view", "target/profile", "--raw"]).unwrap() {
+            Command::View(v) => {
+                assert_eq!(v.target, "target");
+                assert_eq!(v.profile, Some("profile".into()));
+                assert!(v.raw);
+            }
+            _ => panic!("Expected View"),
+        }
+        match parse_vec(&["view", "--raw", "target/profile"]).unwrap() {
+            Command::View(v) => {
+                assert_eq!(v.target, "target");
+                assert_eq!(v.profile, Some("profile".into()));
+                assert!(v.raw);
+            }
+            _ => panic!("Expected View"),
         }
     }
 
     #[test]
     fn test_view_bad_usage() {
-        assert!(parse_vec(&["view"]).is_err());
-        assert!(parse_vec(&["view", "a", "b"]).is_err());
+        match parse_vec(&["view"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe view <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["view", "a", "b"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe view <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+        match parse_vec(&["view", "--raw"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe view <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
     }
 
     // ---------- LIST ----------
 
     #[test]
-    fn test_list() {
-        if let Command::List(l) = parse_vec(&["list"]).unwrap() {
-            assert!(l.target.is_none());
+    fn test_list_bad_usage() {
+        match parse_vec(&["list", "bad", "usage"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe list [<target>]"));
+            }
+            _ => panic!("Expected BadUsage"),
         }
-        if let Command::List(l) = parse_vec(&["list", "tmux"]).unwrap() {
-            assert_eq!(l.target.unwrap(), "tmux");
+        match parse_vec(&["ls", "bad", "usage"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe ls [<target>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+    }
+
+    #[test]
+    fn test_list() {
+        match parse_vec(&["list"]).unwrap() {
+            Command::List(l) => {
+                assert!(l.target.is_none());
+            }
+            _ => panic!("Expected List"),
+        }
+        match parse_vec(&["list", "target"]).unwrap() {
+            Command::List(l) => {
+                assert_eq!(l.target.unwrap(), "target");
+            }
+            _ => panic!("Expected List"),
         }
     }
 
     #[test]
     fn test_list_alias_ls() {
-        if let Command::List(l) = parse_vec(&["ls"]).unwrap() {
-            assert!(l.target.is_none());
+        match parse_vec(&["ls"]).unwrap() {
+            Command::List(l) => {
+                assert!(l.target.is_none());
+            }
+            _ => panic!("Expected List"),
         }
-        if let Command::List(l) = parse_vec(&["ls", "tmux"]).unwrap() {
-            assert_eq!(l.target.unwrap(), "tmux");
+        match parse_vec(&["ls", "target"]).unwrap() {
+            Command::List(l) => {
+                assert_eq!(l.target.unwrap(), "target");
+            }
+            _ => panic!("Expected List"),
         }
     }
 
     // ---------- RM ----------
 
     #[test]
+    fn test_rm_bad_usage() {
+        match parse_vec(&["rm"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("robe rm <target>[/<profile>]"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+    }
+
+    #[test]
     fn test_rm_target() {
-        if let Command::Rm(r) = parse_vec(&["rm", "tmux"]).unwrap() {
-            assert_eq!(r.target, "tmux");
-            assert!(r.profile.is_none());
+        match parse_vec(&["rm", "target"]).unwrap() {
+            Command::Rm(r) => {
+                assert_eq!(r.target, "target");
+                assert!(r.profile.is_none());
+            }
+            _ => panic!("Expected Rm"),
         }
     }
 
     #[test]
     fn test_rm_profile() {
-        if let Command::Rm(r) = parse_vec(&["rm", "tmux/work"]).unwrap() {
-            assert_eq!(r.target, "tmux");
-            assert_eq!(r.profile, Some("work".into()));
+        match parse_vec(&["rm", "target/profile"]).unwrap() {
+            Command::Rm(r) => {
+                assert_eq!(r.target, "target");
+                assert_eq!(r.profile, Some("profile".into()));
+            }
+            _ => panic!("Expected Rm"),
         }
     }
 
@@ -399,7 +647,11 @@ mod tests {
     fn test_help() {
         match parse_vec(&["add", "-h"]).unwrap() {
             Command::Help(t) if t == "add -h" => (),
-            _ => panic!(),
+            _ => panic!("Expected Help"),
+        }
+        match parse_vec(&["add", "--help"]).unwrap() {
+            Command::Help(t) if t == "add --help" => (),
+            _ => panic!("Expected Help"),
         }
     }
 
@@ -407,7 +659,33 @@ mod tests {
     fn test_version() {
         match parse_vec(&["-v"]).unwrap() {
             Command::Version => (),
-            _ => panic!(),
+            _ => panic!("Expected Version"),
+        }
+        match parse_vec(&["--version"]).unwrap() {
+            Command::Version => (),
+            _ => panic!("Expected Version"),
+        }
+    }
+
+    // ---------- UNRECOGNIZED / NOT PROVIDED ----------
+
+    #[test]
+    fn test_graceful_handle_unrecognized_command() {
+        match parse_vec(&["unrecognized"]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("Command not recognized"));
+            }
+            _ => panic!("Expected BadUsage"),
+        }
+    }
+
+    #[test]
+    fn test_graceful_handle_not_provided_command() {
+        match parse_vec(&[]).unwrap_err() {
+            RobeError::BadUsage(msg) => {
+                assert!(msg.contains("No command provided"));
+            }
+            _ => panic!("Expected BadUsage"),
         }
     }
 }

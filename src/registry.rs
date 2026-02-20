@@ -46,7 +46,7 @@ impl TargetRegistry {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct TargetMetadata {
-    real_path: String,
+    pub real_path: String,
 }
 
 impl TargetMetadata {
