@@ -2,6 +2,7 @@
 pub enum RobeError {
     Internal(String),
     BadUsage(String),
+    Hashing(String),
 }
 
 impl RobeError {
@@ -16,6 +17,10 @@ impl std::fmt::Display for RobeError {
             Self::Internal(err) => f.write_fmt(format_args!("robe: {}", err)),
             Self::BadUsage(err) => f.write_fmt(format_args!(
                 "robe: Wrong usage. {}\nUse `robe -h` for help.",
+                err
+            )),
+            Self::Hashing(err) => f.write_fmt(format_args!(
+                "robe: An error occurred when hashing directory contents. {}",
                 err
             )),
         }
