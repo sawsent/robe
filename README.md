@@ -82,9 +82,9 @@ What is planned before v0.1.0 (first stable release)
 - [ ] `robe use` should require `-f` if the current file is different than the last activated profile.
 - [ ] Quality of life improvements:
     - [ ] Profiles should be stored with their respective file endings to allow better editing with `robe edit <target>`
-    - [ ] Better readability in the `dispatch` module.
+    - [x] Better readability in the `dispatch` module.
     - [ ] `--config <file>` allow setting a config file
-    - [ ] better errors
+    - [ ] better errors (especially io)
 - [ ] Coverage:
     - [ ] Coverage should be over 90%
 
