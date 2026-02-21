@@ -35,6 +35,7 @@ fn _main(args: &[String]) -> Result<(), RobeError> {
         Command::Rm(rm) => rm::rm(&rm, &registry)?,
         Command::List(ls) => list::list(&ls, &registry)?,
         Command::View(view) => view::view(&view, &registry)?,
+        Command::Status(status) => status::status(&status, &registry)?,
         Command::Help(_cmd) => println!(
             "{}",
             help::help_with_storage_and_config(&settings.wardrobe, &settings_fp)

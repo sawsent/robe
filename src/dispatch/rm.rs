@@ -46,6 +46,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: PathBuf::from("/fake/path"),
             profiles: vec!["work".to_string(), "home".to_string()],
+            last_activated_profile: None,
         };
 
         let mut targets = HashMap::new();

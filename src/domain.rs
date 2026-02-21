@@ -27,6 +27,7 @@ fn parse_internal(cmd: &str, args: &[String]) -> Result<Command, RobeError> {
         "ls" => List::parse(args, "ls"),
         "rm" => Rm::parse(args),
         "view" => View::parse(args),
+        "status" => Status::parse(args),
         other => Err(RobeError::BadUsage(format!(
             "Command not recognized: {}",
             other
@@ -58,6 +59,7 @@ pub enum Command {
     View(View),
     List(List),
     Rm(Rm),
+    Status(Status),
 }
 
 #[derive(Debug, Clone, Default)]
@@ -288,6 +290,25 @@ impl Rm {
         };
 
         Ok(Command::Rm(Self { target, profile }))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Status {
+    pub target: Option<String>,
+}
+
+impl Status {
+    fn bu() -> RobeError {
+        RobeError::BadUsage("Usage: robe status [<target>]".to_string())
+    }
+    pub fn parse(args: &[String]) -> Result<Command, RobeError> {
+        if args.len() > 1 {
+            Err(Self::bu())
+        } else {
+            let target = args.first().cloned();
+            Ok(Command::Status(Self { target }))
+        }
     }
 }
 

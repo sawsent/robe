@@ -9,6 +9,9 @@ impl RobeError {
     pub fn message(msg: String) -> Self {
         Self::Internal(msg)
     }
+    pub fn target_not_found(target: &str) -> Self {
+        Self::message(format!("Target {} not found", target))
+    }
 }
 
 impl std::fmt::Display for RobeError {

@@ -1,6 +1,7 @@
 pub mod add;
 pub mod edit;
 mod io;
+mod hashing;
 pub mod list;
 pub mod register;
 pub mod rm;

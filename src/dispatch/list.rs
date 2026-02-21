@@ -51,6 +51,7 @@ mod tests {
                 name: "tmux".to_string(),
                 real_path: std::path::PathBuf::from("/fake/tmux"),
                 profiles: vec!["work".to_string(), "clean".to_string()],
+                last_activated_profile: None,
             },
         );
         registry.targets.insert(
@@ -59,6 +60,7 @@ mod tests {
                 name: "nvim".to_string(),
                 real_path: std::path::PathBuf::from("/fake/nvim"),
                 profiles: vec!["minimal".to_string()],
+                last_activated_profile: None,
             },
         );
 
@@ -80,6 +82,7 @@ mod tests {
                 name: "tmux".to_string(),
                 real_path: std::path::PathBuf::from("/fake/tmux"),
                 profiles: vec!["work".to_string(), "clean".to_string()],
+                last_activated_profile: None,
             },
         );
 

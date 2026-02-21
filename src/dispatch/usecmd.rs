@@ -46,6 +46,7 @@ mod tests {
                 name: target_name.to_string(),
                 real_path: target_real_path.clone(),
                 profiles: vec![profile_name.to_string()],
+                last_activated_profile: None,
             },
         );
 

@@ -205,6 +205,7 @@ mod tests {
             name: target_name.into(),
             real_path: PathBuf::from("_"),
             profiles: vec![profile_name.to_string()],
+            last_activated_profile: None,
         };
 
         let mut targets = HashMap::new();

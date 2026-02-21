@@ -185,6 +185,7 @@ z.txt
                 name: "tmux".to_string(),
                 real_path: profile_file.clone(),
                 profiles: vec!["work".to_string()],
+                last_activated_profile: None,
             },
         );
 
@@ -226,6 +227,7 @@ z.txt
                 name: "nvim".to_string(),
                 real_path: profile_dir.clone(),
                 profiles: vec!["minimal".to_string()],
+                last_activated_profile: None,
             },
         );
 

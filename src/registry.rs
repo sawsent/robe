@@ -15,6 +15,7 @@ pub struct TargetRegistry {
     pub name: String,
     pub real_path: PathBuf,
     pub profiles: Vec<String>,
+    pub last_activated_profile: Option<String>,
 }
 
 impl TargetRegistry {
@@ -29,6 +30,7 @@ impl TargetRegistry {
             name: name.to_string(),
             real_path: PathBuf::from(meta.real_path.clone()),
             profiles: prof,
+            last_activated_profile: meta.last_activated_profile.clone(),
         }
     }
 
@@ -47,6 +49,7 @@ impl TargetRegistry {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct TargetMetadata {
     pub real_path: String,
+    pub last_activated_profile: Option<String>,
 }
 
 impl TargetMetadata {
@@ -54,6 +57,7 @@ impl TargetMetadata {
         let tp = path.canonicalize()?;
         Ok(Self {
             real_path: tp.to_string_lossy().to_string(),
+            last_activated_profile: None,
         })
     }
 }
@@ -68,6 +72,19 @@ impl Registry {
             None => Err(RobeError::message(format!("Target {} not found.", target))),
             Some(tr) => Ok(tr),
         }
+    }
+    pub fn get_target_wardrobe(&self, target: &str) -> Result<PathBuf, RobeError> {
+        if let Some(tn) = self.targets.get(target) {
+            Ok(self.base_path.join(&tn.name).canonicalize()?)
+        } else {
+            Err(RobeError::target_not_found(target))
+        }
+    }
+    pub fn get_profile_path(&self, target: &str, profile: &str) -> Result<PathBuf, RobeError> {
+        let tr = self.target_registry(target)?;
+        tr.assert_profile_exists(profile)?;
+
+        Ok(self.get_target_wardrobe(target)?.join(profile))
     }
 }
 
@@ -89,6 +106,7 @@ mod tests {
 
         let meta = TargetMetadata {
             real_path: "/real/path".to_string(),
+            last_activated_profile: None,
         };
 
         let tr = TargetRegistry::new("tmux", &meta, &vec![p1.clone(), p2.clone()]);
@@ -106,6 +124,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: PathBuf::from("/tmp"),
             profiles: vec!["work".to_string(), "clean".to_string()],
+            last_activated_profile: None,
         };
 
         assert!(tr.assert_profile_exists("work").is_ok());
@@ -117,6 +136,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: PathBuf::from("/tmp"),
             profiles: vec!["work".to_string()],
+            last_activated_profile: None,
         };
 
         let err = tr.assert_profile_exists("missing").unwrap_err();
@@ -143,6 +163,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: PathBuf::from("/tmp"),
             profiles: vec!["work".to_string()],
+            last_activated_profile: None,
         };
 
         reg.targets.insert("tmux".to_string(), tr.clone());

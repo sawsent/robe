@@ -58,6 +58,7 @@ mod tests {
                 name: "myconfig".into(),
                 real_path: file_path.clone(),
                 profiles: vec!["default".into()],
+                last_activated_profile: None,
             },
         );
 
@@ -94,6 +95,7 @@ mod tests {
                 name: "myconfig".into(),
                 real_path: real_file_path.clone(),
                 profiles: vec!["default".into()],
+                last_activated_profile: None,
             },
         );
 
@@ -130,6 +132,7 @@ mod tests {
                 name: "myconfig".into(),
                 real_path: file_path.clone(),
                 profiles: vec![],
+                last_activated_profile: None,
             },
         );
 

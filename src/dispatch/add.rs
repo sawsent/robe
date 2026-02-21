@@ -54,6 +54,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: temp.path().join("config.txt"),
             profiles: vec!["work".to_string()],
+            last_activated_profile: None,
         };
         let mut targets = std::collections::HashMap::new();
         targets.insert("tmux".to_string(), tr.clone());
@@ -89,6 +90,7 @@ mod tests {
             name: "tmux".to_string(),
             real_path: source_file.clone(),
             profiles: vec!["work".to_string()],
+            last_activated_profile: None,
         };
         let mut targets = std::collections::HashMap::new();
         targets.insert("tmux".to_string(), tr.clone());

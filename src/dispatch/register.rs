@@ -88,6 +88,7 @@ mod tests {
                 name: "target".to_string(),
                 real_path: temp.path().to_path_buf(),
                 profiles: vec![],
+                last_activated_profile: None,
             },
         );
 
